@@ -12,11 +12,35 @@ describe('Air Quality API Function', () => {
     globalThis.fetch = originalFetch;
   });
 
-  it('handles geocoding search queries with proper cache headers', async () => {
+  it('handles geocoding search queries, normalizing fields and building label', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        results: [{ id: 1, name: 'Delhi', latitude: 28.61, longitude: 77.2, country: 'India' }]
+        results: [
+          {
+            id: 1,
+            name: 'Delhi',
+            latitude: 28.61,
+            longitude: 77.2,
+            country: 'India',
+            country_code: 'IN',
+            admin1: 'NCT of Delhi',
+            timezone: 'Asia/Kolkata',
+            elevation: 216,
+            feature_code: 'PPLA'
+          },
+          {
+            id: 2,
+            name: 'Monaco',
+            latitude: 43.73,
+            longitude: 7.42,
+            country: 'Monaco',
+            country_code: 'MC',
+            admin1: undefined,
+            timezone: 'Europe/Monaco',
+            elevation: 10
+          }
+        ]
       })
     });
 
@@ -26,8 +50,27 @@ describe('Air Quality API Function', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('Cache-Control')).toContain('max-age=600');
     const data = await res.json();
-    expect(data.results).toHaveLength(1);
-    expect(data.results[0].name).toBe('Delhi');
+    expect(data.results).toHaveLength(2);
+
+    const first = data.results[0];
+    expect(first).toEqual({
+      id: 1,
+      name: 'Delhi',
+      latitude: 28.61,
+      longitude: 77.2,
+      admin1: 'NCT of Delhi',
+      country: 'India',
+      countryCode: 'IN',
+      timezone: 'Asia/Kolkata',
+      label: 'Delhi, NCT of Delhi, India'
+    });
+    // Ensure extraneous upstream fields are stripped
+    expect(first.elevation).toBeUndefined();
+    expect(first.feature_code).toBeUndefined();
+
+    const second = data.results[1];
+    expect(second.admin1).toBe('');
+    expect(second.label).toBe('Monaco, Monaco');
   });
 
   it('fetches coordinates and normalizes responses into domain shapes', async () => {

@@ -46,14 +46,17 @@
  */
 
 /**
- * Geocoding search candidate result
+ * Geocoding search candidate result normalized from Open-Meteo
  * @typedef {Object} GeocodingLocationResult
  * @property {number} id
  * @property {string} name
  * @property {number} latitude
  * @property {number} longitude
+ * @property {string} admin1
  * @property {string} country
- * @property {string} [admin1]
+ * @property {string} countryCode
+ * @property {string} timezone
+ * @property {string} label
  */
 
 /**

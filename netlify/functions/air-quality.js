@@ -45,9 +45,10 @@ async function fetchWithTimeout(url, params) {
 }
 
 /**
- * Fetches geocoding candidates from Open-Meteo.
+ * Fetches and normalizes geocoding candidates from Open-Meteo.
+ * Caps results at 5 and strips all non-whitelisted upstream properties.
  * @param {string} query
- * @returns {Promise<Array<object>>}
+ * @returns {Promise<Array<import('./lib/types.js').GeocodingLocationResult>>}
  */
 async function searchGeocoding(query) {
   const params = new URLSearchParams({
@@ -57,7 +58,38 @@ async function searchGeocoding(query) {
     format: 'json'
   });
   const data = await fetchWithTimeout('https://geocoding-api.open-meteo.com/v1/search', params);
-  return data.results || [];
+  const rawResults = Array.isArray(data?.results) ? data.results : [];
+
+  return rawResults.slice(0, 5).map((item) => {
+    const name = typeof item.name === 'string' ? item.name.trim() : '';
+    const admin1 = typeof item.admin1 === 'string' ? item.admin1.trim() : '';
+    const country = typeof item.country === 'string' ? item.country.trim() : '';
+    const countryCode =
+      typeof item.country_code === 'string'
+        ? item.country_code.trim()
+        : typeof item.countryCode === 'string'
+          ? item.countryCode.trim()
+          : '';
+    const timezone = typeof item.timezone === 'string' ? item.timezone.trim() : '';
+
+    const label = admin1
+      ? `${name}, ${admin1}, ${country}`
+      : country
+        ? `${name}, ${country}`
+        : name;
+
+    return {
+      id: item.id,
+      name,
+      latitude: item.latitude,
+      longitude: item.longitude,
+      admin1,
+      country,
+      countryCode,
+      timezone,
+      label
+    };
+  });
 }
 
 /**

@@ -3,6 +3,7 @@ import {
   AQI_CATEGORIES,
   getCategory,
   getDominantPollutant,
+  calculateSubIndex,
   getAqiCategory,
   getAqiColor,
   shouldLimitOutdoorActivity
@@ -70,40 +71,85 @@ describe('AQI Domain Logic', () => {
     });
   });
 
-  describe('getDominantPollutant', () => {
-    it('identifies dominant pollutant by highest threshold ratio', () => {
-      const readings = {
-        pm2_5: 70, // 70 / 35 = 2.0
-        pm10: 150, // 150 / 150 = 1.0
-        no2: 50 // 50 / 100 = 0.5
+  describe('getDominantPollutant and EPA AQI Sub-Index Calculation', () => {
+    it('correctly calculates sub-indices for individual pollutants', () => {
+      // PM2.5: 12 µg/m³ -> AQI 50, 35.4 µg/m³ -> AQI 100
+      expect(calculateSubIndex('pm2_5', 12)).toBe(50);
+      expect(calculateSubIndex('pm2_5', 35.4)).toBe(100);
+
+      // CO: 1145.6 µg/m³ = 1 ppm -> 1.0 ppm in [0.0, 4.4] -> round((50/4.4)*1.0) = 11
+      expect(calculateSubIndex('co', 1145.6)).toBe(11);
+    });
+
+    it('identifies pm2_5 as dominant for Delhi winter smog (high PM2.5 & PM10, high/moderate CO in µg/m³)', () => {
+      const delhiWinterSmog = {
+        pm2_5: 185.0, // Sub-index ~235
+        pm10: 260.0, // Sub-index ~153
+        no2: 55.0, // Sub-index ~28 (55 / 1.88 = 29 ppb)
+        o3: 20.0, // Sub-index ~10
+        so2: 15.0, // Sub-index ~8
+        co: 1800.0 // 1800 µg/m³ = 1.57 ppm -> Sub-index ~18 (NOT dominant!)
       };
-      const result = getDominantPollutant(readings);
+      const result = getDominantPollutant(delhiWinterSmog);
       expect(result).not.toBeNull();
       expect(result?.pollutant).toBe('pm2_5');
-      expect(result?.ratio).toBe(2.0);
-      expect(result?.value).toBe(70);
+      expect(result?.subIndex).toBeGreaterThan(200);
+      expect(result?.value).toBe(185.0);
+    });
+
+    it('identifies o3 as dominant for summer ozone-dominated episodes', () => {
+      const summerOzone = {
+        pm2_5: 15.0, // Sub-index ~57
+        pm10: 30.0, // Sub-index ~28
+        o3: 175.0, // 175 / 1.96 = 89.3 ppb -> Sub-index ~159
+        no2: 30.0,
+        so2: 10.0,
+        co: 600.0 // 600 / 1145.6 = 0.52 ppm -> Sub-index ~6
+      };
+      const result = getDominantPollutant(summerOzone);
+      expect(result).not.toBeNull();
+      expect(result?.pollutant).toBe('o3');
+      expect(result?.subIndex).toBeGreaterThan(150);
+    });
+
+    it('handles missing or omitted pollutant values gracefully', () => {
+      const missingReadings = {
+        pm2_5: 65.0,
+        pm10: null,
+        co: undefined,
+        // @ts-expect-error test NaN
+        no2: NaN
+      };
+      const result = getDominantPollutant(missingReadings);
+      expect(result).not.toBeNull();
+      expect(result?.pollutant).toBe('pm2_5');
+      expect(result?.subIndex).toBeGreaterThan(150);
+    });
+
+    it('handles the all-zero readings case without error', () => {
+      const allZero = {
+        pm2_5: 0,
+        pm10: 0,
+        no2: 0,
+        o3: 0,
+        so2: 0,
+        co: 0
+      };
+      const result = getDominantPollutant(allZero);
+      expect(result).not.toBeNull();
+      expect(result?.pollutant).toBe('pm2_5');
+      expect(result?.subIndex).toBe(0);
+      expect(result?.value).toBe(0);
     });
 
     it('normalizes alternate keys like pm25 or hyphenated keys', () => {
       const readings = {
-        pm25: 105, // 105 / 35 = 3.0
+        pm25: 110,
         o3: 35
       };
       const result = getDominantPollutant(readings);
       expect(result?.pollutant).toBe('pm2_5');
-      expect(result?.ratio).toBe(3.0);
-    });
-
-    it('handles o3 or no2 as dominant when elevated', () => {
-      const readings = {
-        pm2_5: 10,
-        o3: 140, // 140 / 70 = 2.0
-        no2: 25,
-        so2: 15,
-        co: 2
-      };
-      const result = getDominantPollutant(readings);
-      expect(result?.pollutant).toBe('o3');
+      expect(result?.subIndex).toBeGreaterThan(170);
     });
 
     it('returns null on empty, invalid, or missing inputs', () => {
