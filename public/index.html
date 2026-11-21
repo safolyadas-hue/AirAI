@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="CleanAir Companion: GenAI-powered assistant helping families navigate winter smog and urban air pollution with actionable, low-emission routines."
+    />
+    <title>CleanAir Companion</title>
+    <link rel="stylesheet" href="./css/tokens.css" />
+    <link rel="stylesheet" href="./css/base.css" />
+    <link rel="stylesheet" href="./css/layout.css" />
+    <link rel="stylesheet" href="./css/components.css" />
+    <link rel="stylesheet" href="./css/themes.css" />
+  </head>
+  <body>
+    <header class="app-header" role="banner">
+      <div class="header-container">
+        <div class="brand">
+          <span class="brand-icon" aria-hidden="true">🍃</span>
+          <h1 id="app-title">CleanAir Companion</h1>
+        </div>
+        <nav aria-label="Main Navigation">
+          <ul class="nav-list">
+            <li><a href="#dashboard" class="nav-link">Dashboard</a></li>
+            <li><a href="#advice" class="nav-link">AI Advice</a></li>
+            <li><a href="#impact" class="nav-link">Impact</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content" class="app-main" role="main">
+      <!-- Dynamic live region for a11y announcements -->
+      <div id="a11y-announcements" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+      <div id="app-root">
+        <!-- Dashboard, onboarding, chat and impact UI are mounted here -->
+      </div>
+    </main>
+
+    <footer class="app-footer" role="contentinfo">
+      <p>&copy; CleanAir Companion. Empowering cleaner air and resilient communities.</p>
+    </footer>
+
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>

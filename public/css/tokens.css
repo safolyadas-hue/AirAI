@@ -1,0 +1,52 @@
+/**
+ * CSS Design Tokens
+ * Adheres to WCAG AA contrast, accessible scaling, and spacing tokens
+ */
+:root {
+  --font-family-base:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+    sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Color Palette - Clean Air theme (WCAG AA compliant contrast) */
+  --color-primary: #1b6442;
+  --color-primary-hover: #144e33;
+  --color-primary-light: #e8f5e9;
+  --color-primary-text: #ffffff;
+
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-border: #d1d5db;
+  --color-text-main: #111827;
+  --color-text-muted: #4b5563;
+
+  /* AQI Status Palette (EPA Breakpoints) */
+  --aqi-good: #007a3d;
+  --aqi-moderate: #946800;
+  --aqi-unhealthy-sensitive: #c44000;
+  --aqi-unhealthy: #b3001e;
+  --aqi-very-unhealthy: #6b007b;
+  --aqi-hazardous: #590024;
+
+  /* Spacing Tokens */
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+
+  /* Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-full: 9999px;
+
+  /* Touch Targets & Shadows */
+  --min-touch-target: 44px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}

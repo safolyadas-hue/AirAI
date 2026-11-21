@@ -1,0 +1,29 @@
+/**
+ * Theme overrides: dark mode & high contrast
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0f172a;
+    --color-surface: #1e293b;
+    --color-surface-elevated: #334155;
+    --color-border: #475569;
+    --color-text-main: #f8fafc;
+    --color-text-muted: #94a3b8;
+    --color-primary: #34d399;
+    --color-primary-hover: #10b981;
+    --color-primary-light: #064e3b;
+    --color-primary-text: #022c22;
+  }
+}
+
+[data-theme='high-contrast'] {
+  --color-bg: #000000;
+  --color-surface: #000000;
+  --color-surface-elevated: #111111;
+  --color-border: #ffffff;
+  --color-text-main: #ffffff;
+  --color-text-muted: #e5e5e5;
+  --color-primary: #00ff66;
+  --color-primary-hover: #33ff88;
+  --color-primary-text: #000000;
+}
