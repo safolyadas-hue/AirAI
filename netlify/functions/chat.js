@@ -1,60 +1,53 @@
 /**
  * Netlify Function: CleanAir Assistant Chat Endpoint
  * Path: /api/chat
+ *
+ * Scoped strictly to air quality, health protection, and sustainable living.
  */
-import { jsonResponse, errorResponse } from './lib/http.js';
-import { parseJsonBody } from './lib/validate.js';
-import { checkRateLimit } from './lib/rateLimit.js';
+import { json, errorResponse, methodGuard, safeParseJson } from './lib/http.js';
+import { validateChatPayload } from './lib/validate.js';
+import { enforceRateLimit } from './lib/rateLimit.js';
 import { callGemini } from './lib/gemini.js';
-import { SYSTEM_PROMPT } from './lib/prompts.js';
+import { CHAT_SYSTEM_PROMPT, buildChatUserPrompt } from './lib/prompts.js';
 
 export const config = {
   path: '/api/chat'
 };
 
+const FALLBACK_CHAT_REPLY =
+  'I am currently operating in offline mode. For immediate air protection, please seal drafty windows, run HEPA filtration indoors, and wear a certified N95 respirator if stepping outside during elevated AQI. Please consult a doctor for personal medical concerns.';
+
 /**
- * Handles interactive user chat inquiries.
+ * Handles conversational air pollution inquiries.
  * @param {Request} req
  * @returns {Promise<Response>}
  */
 export default async function handler(req) {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204 });
-  }
+  const methodBlock = methodGuard(req, ['POST']);
+  if (methodBlock) return methodBlock;
 
-  if (req.method !== 'POST') {
-    return errorResponse('Method Not Allowed', 405);
-  }
+  const rateBlock = enforceRateLimit(req, 'ai');
+  if (rateBlock) return rateBlock;
 
-  const clientIp = req.headers.get('x-forwarded-for') || '127.0.0.1';
-  const limit = checkRateLimit(clientIp);
-  if (!limit.allowed) {
-    return errorResponse('Too many requests. Please try again later.', 429);
-  }
-
-  const bodyCheck = await parseJsonBody(req);
+  const bodyCheck = await safeParseJson(req);
   if (!bodyCheck.valid || !bodyCheck.data) {
     return errorResponse(bodyCheck.error || 'Invalid request body', 400);
   }
 
-  const { message, context } = bodyCheck.data;
-  if (!message || typeof message !== 'string') {
-    return errorResponse('Message string is required.', 400);
+  const check = validateChatPayload(bodyCheck.data);
+  if (!check.valid || !check.sanitized) {
+    return errorResponse(check.error || 'Invalid chat parameters', 400);
   }
 
-  const promptWithContext = `
-User Context:
-${JSON.stringify(context || {})}
-
-User Question:
-${message}
-`.trim();
+  const { message, history, context } = check.sanitized;
+  const prompt = buildChatUserPrompt(message, context, history);
 
   try {
-    const reply = await callGemini(promptWithContext, SYSTEM_PROMPT);
-    return jsonResponse({ reply });
-  } catch (err) {
-    const errorMsg = err instanceof Error ? err.message : 'Unknown AI error';
-    return errorResponse(`Failed to process message: ${errorMsg}`, 500);
+    const reply = await callGemini(prompt, CHAT_SYSTEM_PROMPT, {
+      timeoutMs: 6500
+    });
+    return json({ reply });
+  } catch (_err) {
+    return json({ reply: FALLBACK_CHAT_REPLY, fallback: true });
   }
 }
