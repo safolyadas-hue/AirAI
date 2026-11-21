@@ -13,8 +13,8 @@ describe('HTTP Utilities & Security Headers', () => {
   it('creates JSON response with default 200 status and secure headers', async () => {
     expect(SECURE_DEFAULT_HEADERS['X-Content-Type-Options']).toBe('nosniff');
     const res = json({ status: 'ok' });
-    expect(res.status).toBe(200);
     expect(jsonResponse({ legacy: true }).status).toBe(200);
+    expect(res.status).toBe(200);
     expect(res.headers.get('Content-Type')).toBe('application/json');
     expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
     expect(res.headers.get('Cache-Control')).toBe('no-store, max-age=0');

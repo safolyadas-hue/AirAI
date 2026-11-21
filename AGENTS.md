@@ -42,6 +42,7 @@ These binding rules must be followed in every task:
 - Every domain function and every Netlify function must have unit tests using Vitest.
 - Vitest configured with `passWithNoTests: true`.
 - Run checks (`npm run check`) to ensure ESLint and Vitest tests pass before committing.
+- Endpoint smoke testing script (`npm run smoke`) validates all live or local Netlify dev endpoints against realistic scenarios and security guardrails.
 
 ## 6. Git & Asset Constraints
 

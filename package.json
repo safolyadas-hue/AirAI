@@ -13,6 +13,7 @@
     "format:fix": "prettier --write .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "smoke": "node scripts/smoke-test.js",
     "check": "npm run lint && npm run test"
   },
   "devDependencies": {
