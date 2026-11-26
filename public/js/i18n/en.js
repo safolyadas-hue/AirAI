@@ -1,53 +1,153 @@
 /**
  * English Dictionary (Single Source of Truth for User-Facing Strings)
+ * Adheres strictly to AGENTS.md internationalization rule: no hardcoded UI strings.
  */
 export const i18n = Object.freeze({
   app: {
     title: 'CleanAir Companion',
-    tagline: 'Navigate winter smog and urban air pollution with science-backed habits.'
+    tagline:
+      'Personalized guidance for navigating smog, protecting indoor air, and reducing emissions.',
+    skipToContent: 'Skip to main content',
+    demoBadge: 'DEMO PREVIEW'
+  },
+  nav: {
+    label: 'Main Navigation',
+    today: 'Today',
+    plan: 'My Plan',
+    indoor: 'Indoor Air',
+    swaps: 'Greener Swaps',
+    ask: 'Ask Assistant',
+    impact: 'My Impact'
+  },
+  header: {
+    locationLabel: 'Location',
+    demoCity: 'New Delhi (NCR)',
+    themeLabel: 'Toggle color scheme',
+    themeLight: 'Light theme',
+    themeDark: 'Dark theme',
+    themeSystem: 'System theme',
+    fontSizeLabel: 'Adjust text size',
+    fontNormal: 'Standard text size',
+    fontLarge: 'Large text size',
+    fontLarger: 'Extra large text size'
+  },
+  demo: {
+    controlLabel: 'Demo: preview air quality levels',
+    legend: 'Demo AQI Level:',
+    good: 'Good (35)',
+    moderate: 'Moderate (78)',
+    usg: 'USG (132)',
+    unhealthy: 'Unhealthy (185)',
+    veryUnhealthy: 'Very Unhealthy (245)',
+    hazardous: 'Hazardous (340)'
   },
   aqiCategories: {
     good: 'Good',
     moderate: 'Moderate',
     unhealthySensitive: 'Unhealthy for Sensitive Groups',
+    usg: 'Unhealthy for Sensitive Groups',
     unhealthy: 'Unhealthy',
     veryUnhealthy: 'Very Unhealthy',
     hazardous: 'Hazardous'
   },
-  dashboard: {
-    currentAqi: 'Current Air Quality Index',
-    pm25Label: 'PM2.5 Concentration',
-    forecast: 'Hourly Air Quality Forecast',
-    quickAdvice: 'Recommended Actions Right Now',
-    noData: 'No air quality data available for this location.'
+  hero: {
+    gaugeTitle: 'Current US AQI Reading',
+    gaugeDesc: 'Circular dial visualizing current air pollution level and health status.',
+    dominantPrefix: 'Main pollutant:',
+    updatedJustNow: 'Updated 4 mins ago',
+    hazeLabel: 'Smog inversion haze layer',
+    safeNotice: 'Conditions are safe for all outdoor activity.'
   },
-  onboarding: {
-    heading: 'Customize Your Clean Air Routine',
-    subheading: 'Tell us a bit about your household to get tailored recommendations.',
-    locationLabel: 'Your City or Area',
-    locationPlaceholder: 'e.g. New Delhi, Salt Lake, Downtown',
-    vulnerableGroupPrompt:
-      'Anyone in your household sensitive to pollution? (Kids, elderly, asthma)',
-    commuteModeLabel: 'Daily Commute Method',
-    saveButton: 'Save Preferences'
+  today: {
+    heading: 'Today’s Air & Immediate Routines',
+    riskBannerTitle: 'Today’s Air Quality Briefing',
+    timelineTitle: '24-Hour Air Quality & Ventilation Windows',
+    timelineSubhead: 'Optimal times for outdoor errands, exercise, and window sealing.',
+    bestWindowLabel: 'Cleanest Outdoor Window',
+    worstWindowLabel: 'Peak Smog Window',
+    stagnationLabel: 'Inversion Stagnation Risk',
+    recommendedActionsTitle: 'Priority Protective Actions Right Now',
+    noActionsAvailable: 'No high-priority alerts for this category.'
+  },
+  plan: {
+    heading: 'Personalized Clean Air Plan',
+    subheading:
+      'Tailored daily protective routine based on your household, commute, and home profile.',
+    profileSummaryTitle: 'Household Exposure Profile',
+    routineTitle: 'Structured Daily Schedule',
+    morning: 'Morning Routine (6:00 - 9:00 AM)',
+    commute: 'Commute Protection (9:00 - 11:00 AM)',
+    midday: 'Midday Indoor Defense (12:00 - 4:00 PM)',
+    evening: 'Evening Kitchen & Home (5:00 - 8:00 PM)',
+    night: 'Overnight Recovery (9:00 PM - 6:00 AM)',
+    whyDisclosureTitle: 'Why this action matters'
+  },
+  indoor: {
+    heading: 'Indoor Air Quality Hacks',
+    subheading: 'Low-cost, highly effective techniques to keep particulate levels low indoors.',
+    purifierStatusTitle: 'Air Cleaning & Filtration',
+    ventilationTitle: 'Smart Ventilation Timing',
+    cookingTitle: 'Kitchen Emission Controls',
+    sealingTitle: 'Thermal Leak & Gap Sealing',
+    effortLabel: 'Effort',
+    costLabel: 'Cost Tier',
+    freeCost: 'Free / Zero Cost',
+    lowCost: 'Low Cost (< $15)'
+  },
+  swaps: {
+    heading: 'Greener Urban Swaps',
+    subheading:
+      'Small daily choices that reduce your personal emissions footprint while protecting lungs.',
+    commuteSwapsTitle: 'Clean Transit Alternatives',
+    heatingCookingTitle: 'Clean Heating & Cooking',
+    communityTitle: 'Neighborhood Action',
+    estimatedAvoidance: 'Emissions Avoided'
   },
   chat: {
-    title: 'CleanAir Assistant',
-    inputPlaceholder: 'Ask how to protect your family or reduce emissions...',
+    heading: 'CleanAir Assistant',
+    subheading:
+      'Ask questions about respiratory protection, DIY filters, smog science, or daily routines.',
+    inputPlaceholder: 'Ask about masks, air filters, or ventilation timing...',
     sendButton: 'Send message',
-    loading: 'Generating personalized clean air advice...',
-    disclaimer: 'Advice is generated by AI based on scientific air quality guidelines.'
+    suggestedHeading: 'Suggested queries:',
+    suggested1: 'What mask should I wear when AQI is over 150?',
+    suggested2: 'How do I build a DIY Corsi-Rosenthal box filter?',
+    suggested3: 'Is it safe to exercise outdoors this morning?',
+    disclaimer: 'Guidance only. Not medical advice. For persistent symptoms, consult a doctor.'
   },
   impact: {
-    title: 'Your Clean Air Impact',
-    co2SavedLabel: 'Estimated CO₂ Avoided',
-    indoorReductionLabel: 'Indoor PM2.5 Reduction',
-    routinesCompletedLabel: 'Clean Habits Adopted'
+    heading: 'Your Environmental & Health Impact',
+    subheading:
+      'Real emissions avoided and particulate exposure reduced through sustainable routines.',
+    co2SavedTitle: 'CO₂ Emissions Avoided',
+    co2Metric: 'kg CO₂e',
+    indoorReductionTitle: 'Indoor PM2.5 Reduction',
+    indoorMetric: '% cleaner air',
+    routinesCompletedTitle: 'Routines Maintained',
+    routinesMetric: 'consecutive days',
+    tierBadgeTitle: 'Current Milestone Tier',
+    equivalentTrees: 'Equivalent to planting 3 mature urban trees.'
+  },
+  components: {
+    whyThis: 'Why this choice matters',
+    emptyTitle: 'No data currently available',
+    emptyText: 'We could not load information for this section. Please try again.',
+    errorTitle: 'Unable to load content',
+    retryButton: 'Try again',
+    close: 'Close',
+    expand: 'Expand details'
   },
   toast: {
-    errorGeneric: 'Something went wrong. Please check your connection and try again.',
-    preferencesSaved: 'Your clean air profile has been updated.',
-    aqiUpdated: 'Latest air quality data loaded.'
+    themeUpdated: 'Appearance updated.',
+    fontSizeUpdated: 'Text size updated.',
+    viewChanged: 'View switched to ',
+    demoAqiSwitched: 'Demo AQI switched to '
+  },
+  footer: {
+    attribution: 'Air quality measurements & meteorological forecasts powered by Open-Meteo.',
+    medicalDisclaimer:
+      'CleanAir Companion provides informational guidance based on WHO & EPA standards. It does not provide medical diagnosis or replace clinical advice.',
+    repoLink: 'GitHub Project'
   }
 });
 

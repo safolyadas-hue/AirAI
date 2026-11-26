@@ -1,49 +1,72 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-aqi="unhealthy">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
       name="description"
-      content="CleanAir Companion: GenAI-powered assistant helping families navigate winter smog and urban air pollution with actionable, low-emission routines."
+      content="CleanAir Companion: GenAI-powered assistant helping families navigate severe winter smog and urban air pollution with actionable, low-emission routines."
     />
-    <title>CleanAir Companion</title>
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#070d18" media="(prefers-color-scheme: dark)" />
+
+    <!-- Open Graph Metadata -->
+    <meta property="og:title" content="CleanAir Companion" />
+    <meta
+      property="og:description"
+      content="Personalized guidance for navigating smog, protecting indoor air, and reducing urban emissions."
+    />
+    <meta property="og:type" content="website" />
+
+    <!-- Inline SVG Favicon (Data URI) -->
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a6c42' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z'/%3E%3C/svg%3E"
+    />
+
+    <!-- Google Fonts Typography with Preconnect (Fraunces & Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Stylesheets in Strict Loading Order -->
     <link rel="stylesheet" href="./css/tokens.css" />
     <link rel="stylesheet" href="./css/base.css" />
     <link rel="stylesheet" href="./css/layout.css" />
     <link rel="stylesheet" href="./css/components.css" />
     <link rel="stylesheet" href="./css/themes.css" />
+
+    <!-- Early Theme Loader Script (No inline scripts for strict CSP) -->
+    <script src="./js/ui/theme-init.js"></script>
+
+    <title>CleanAir Companion</title>
   </head>
   <body>
-    <header class="app-header" role="banner">
-      <div class="header-container">
-        <div class="brand">
-          <span class="brand-icon" aria-hidden="true">🍃</span>
-          <h1 id="app-title">CleanAir Companion</h1>
-        </div>
-        <nav aria-label="Main Navigation">
-          <ul class="nav-list">
-            <li><a href="#dashboard" class="nav-link">Dashboard</a></li>
-            <li><a href="#advice" class="nav-link">AI Advice</a></li>
-            <li><a href="#impact" class="nav-link">Impact</a></li>
-          </ul>
-        </nav>
+    <!-- Skip to Content Link (First Focusable Element) -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Polite Live Region for Screen Reader Announcements -->
+    <div id="a11y-announcements" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+    <noscript>
+      <div class="card card-tinted" style="margin: 1rem; text-align: center">
+        <p>
+          CleanAir Companion requires JavaScript to render real-time air quality forecasts and
+          navigation.
+        </p>
       </div>
-    </header>
+    </noscript>
 
-    <main id="main-content" class="app-main" role="main">
-      <!-- Dynamic live region for a11y announcements -->
-      <div id="a11y-announcements" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+    <!-- Main Application Shell Root Container -->
+    <div id="app-root" class="app-wrapper">
+      <!-- Header, Demo Controls, Navigation, and Views are mounted here by main.js -->
+    </div>
 
-      <div id="app-root">
-        <!-- Dashboard, onboarding, chat and impact UI are mounted here -->
-      </div>
-    </main>
-
-    <footer class="app-footer" role="contentinfo">
-      <p>&copy; CleanAir Companion. Empowering cleaner air and resilient communities.</p>
-    </footer>
-
+    <!-- Main ES Module Script -->
     <script type="module" src="./js/main.js"></script>
   </body>
 </html>

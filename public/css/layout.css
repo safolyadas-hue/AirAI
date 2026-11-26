@@ -1,52 +1,276 @@
 /**
- * Layout styling
+ * Clear Sky Design System - Layout Architecture
+ * Mobile-first responsive layout with desktop bento grid and mobile fixed bottom nav.
  */
+
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header (Sticky Top) */
 .app-header {
-  background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: var(--z-header);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .header-container {
-  max-width: 1200px;
+  max-width: var(--content-max-width);
   margin: 0 auto;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-3) var(--space-4);
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
+  gap: var(--space-4);
 }
 
-.brand {
+.brand-group {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: var(--space-3);
+  text-decoration: none;
+  color: var(--color-text);
 }
 
-.brand h1 {
-  font-size: 1.25rem;
+.brand-logo {
+  width: 36px;
+  height: 36px;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.brand-text-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-tight);
+  color: var(--color-text);
   font-weight: 700;
 }
 
-.nav-list {
-  display: flex;
-  list-style: none;
-  gap: var(--space-md);
+.brand-badge {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  font-weight: 700;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Demo Control Bar */
+.demo-control-bar {
+  background: var(--color-surface-sunken);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-xs);
+}
+
+.demo-control-inner {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.demo-title-tag {
+  font-weight: 600;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Main Content Landmark */
 .app-main {
   flex: 1;
-  max-width: 1200px;
+  max-width: var(--content-max-width);
   width: 100%;
   margin: 0 auto;
-  padding: var(--space-lg) var(--space-md);
+  padding: var(--space-5) var(--space-4) calc(var(--space-16) + 40px); /* Leave room for mobile nav */
 }
 
-.app-footer {
+@media (min-width: 1024px) {
+  .app-main {
+    padding: var(--space-6) var(--space-6) var(--space-12);
+  }
+}
+
+/* Desktop Navigation (Tabs under header) */
+.desktop-nav {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .desktop-nav {
+    display: block;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .desktop-nav-inner {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    padding: 0 var(--space-4);
+    display: flex;
+    gap: var(--space-1);
+  }
+
+  .nav-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    border-bottom: 3px solid transparent;
+    transition: all var(--duration-fast) var(--ease-standard);
+  }
+
+  .nav-tab-btn:hover {
+    color: var(--color-text);
+    background: var(--color-surface-sunken);
+  }
+
+  .nav-tab-btn[aria-selected='true'] {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
+  }
+}
+
+/* Mobile Bottom Navigation (Fixed) */
+.mobile-nav {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-nav);
+  background: var(--color-surface);
   border-top: 1px solid var(--color-border);
-  padding: var(--space-md);
-  text-align: center;
-  font-size: 0.875rem;
+  box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.08);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  justify-content: space-around;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .mobile-nav {
+    display: none;
+  }
+}
+
+.mobile-tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--space-2) 0;
   color: var(--color-text-muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.mobile-tab-btn[aria-selected='true'] {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.mobile-tab-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Bento Grid System for Today / Dashboard */
+.bento-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5);
+}
+
+@media (min-width: 640px) {
+  .bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .bento-grid {
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--space-6);
+  }
+
+  .col-span-12 {
+    grid-column: span 12;
+  }
+  .col-span-8 {
+    grid-column: span 8;
+  }
+  .col-span-7 {
+    grid-column: span 7;
+  }
+  .col-span-5 {
+    grid-column: span 5;
+  }
+  .col-span-4 {
+    grid-column: span 4;
+  }
+  .col-span-6 {
+    grid-column: span 6;
+  }
+}
+
+/* Footer Landmark */
+.app-footer {
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-8) var(--space-4) calc(var(--space-12) + 50px);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+@media (min-width: 1024px) {
+  .app-footer {
+    padding: var(--space-8) var(--space-4);
+  }
+}
+
+.footer-inner {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  text-align: center;
+  align-items: center;
+}
+
+@media (min-width: 640px) {
+  .footer-inner {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
 }

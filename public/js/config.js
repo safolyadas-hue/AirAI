@@ -33,10 +33,41 @@ export const API_ENDPOINTS = Object.freeze({
 });
 
 /**
- * Gemini AI Service Timeout and Token Configuration
- * Source: Tailored for low-latency serverless execution (20s structured advice, 12s chat).
+ * Flag controlling temporary demo mode for visual design system validation.
+ * Temporary demo preview control; will be removed in Step 5 when live data is fully wired.
  */
-export const GEMINI_TIMEOUTS = Object.freeze({
-  ADVICE_MS: 20000,
-  CHAT_MS: 12000
+export const DEMO_MODE = true;
+
+/**
+ * Maps pure domain AQI category identifiers from aqi.js to CSS data-aqi theme attribute values.
+ */
+export const AQI_THEME_MAP = Object.freeze({
+  good: 'good',
+  moderate: 'moderate',
+  unhealthy_sensitive: 'usg',
+  unhealthy: 'unhealthy',
+  very_unhealthy: 'very-unhealthy',
+  hazardous: 'hazardous'
+});
+
+/**
+ * Primary navigation views supported in the Clear Sky app shell.
+ */
+export const NAV_TABS = Object.freeze([
+  { id: 'today', icon: 'wind' },
+  { id: 'plan', icon: 'shield' },
+  { id: 'indoor', icon: 'home' },
+  { id: 'swaps', icon: 'leaf' },
+  { id: 'ask', icon: 'chat' },
+  { id: 'impact', icon: 'bike' }
+]);
+
+/**
+ * Storage keys for persistent UI preferences.
+ */
+export const STORAGE_KEYS = Object.freeze({
+  THEME: 'cleanair_theme_pref',
+  FONT_SIZE: 'cleanair_font_size_pref',
+  PROFILE: 'cleanair_user_profile',
+  ACTIVE_TAB: 'cleanair_active_tab'
 });

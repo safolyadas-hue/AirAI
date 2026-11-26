@@ -1,38 +1,57 @@
 /**
- * Accessible Toast Notifications
- * DOM rendering only.
+ * Accessible Toast Notification System
+ * Uses polite aria-live regions and safe DOM builders.
  */
-import { createElement } from './dom.js';
-import { announceToScreenReader } from './a11y.js';
+import { h, mount } from './dom.js';
+import { announce } from './a11y.js';
+
+let toastContainer = null;
 
 /**
- * Displays a temporary toast message and announces it to assistive technologies.
- * @param {string} message - Message text.
- * @param {'info' | 'success' | 'error'} [type='info'] - Severity level.
- * @param {number} [durationMs=4000] - Display duration.
+ * Returns or creates the persistent toast notification container.
+ * @returns {HTMLElement}
  */
-export function showToast(message, type = 'info', durationMs = 4000) {
-  announceToScreenReader(message);
-
-  let container = document.getElementById('toast-container');
-  if (!container) {
-    container = createElement('div', {
-      attributes: { id: 'toast-container', role: 'status', 'aria-live': 'polite' },
-      classes: ['toast-container']
+function getToastContainer() {
+  if (!toastContainer || !document.body.contains(toastContainer)) {
+    toastContainer = h('div', {
+      className: 'toast-container',
+      role: 'status',
+      'aria-live': 'polite',
+      'aria-atomic': 'true'
     });
-    document.body.appendChild(container);
+    document.body.appendChild(toastContainer);
   }
+  return toastContainer;
+}
 
-  const toast = createElement('div', {
-    classes: ['toast', `toast-${type}`],
-    text: message
-  });
+/**
+ * Displays an accessible toast notification.
+ * @param {string} message - Message text to display and announce.
+ * @param {Object} [options={}] - Options.
+ * @param {'info' | 'success' | 'error' | 'warning'} [options.type='info'] - Severity tier.
+ * @param {number} [options.duration=4000] - Duration in milliseconds before dismissal.
+ */
+export function showToast(message, { type = 'info', duration = 4000 } = {}) {
+  if (!message) return;
 
-  container.appendChild(toast);
+  // Screen reader announcement
+  announce(message);
+
+  const container = getToastContainer();
+  const toast = h(
+    'div',
+    {
+      className: `toast toast-${type}`,
+      tabindex: '0'
+    },
+    message
+  );
+
+  mount(container, toast);
 
   setTimeout(() => {
     if (toast.parentNode) {
       toast.parentNode.removeChild(toast);
     }
-  }, durationMs);
+  }, duration);
 }
