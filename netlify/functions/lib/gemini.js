@@ -1,11 +1,67 @@
 /**
  * Google Gemini Generative AI Client
- * Native fetch integration with timeout, single 5xx retry, and secure key handling.
+ * Native fetch integration with typed failure classification, timeout, retry, and secure key handling.
  */
 
 const DEFAULT_MODEL = 'gemini-2.5-flash';
 const DEFAULT_TIMEOUT_MS = 8000; // 8s timeout
 const RETRY_DELAY_MS = 500; // 500ms before retry on 5xx
+
+/**
+ * Standard classification reasons for Gemini API failures
+ * @typedef {'missing_key' | 'timeout' | 'http_error' | 'invalid_json' | 'schema_mismatch' | 'empty_response'} GeminiFailureReason
+ */
+
+/**
+ * Typed Error for classified Gemini operations.
+ * Never includes API keys, request bodies, or user content in error messages.
+ */
+export class GeminiError extends Error {
+  /**
+   * @param {GeminiFailureReason} reason - Classified failure reason.
+   * @param {string} message - Sanitized error message without user content or secrets.
+   * @param {number} [status] - Optional HTTP status code for http_error.
+   */
+  constructor(reason, message, status) {
+    super(message);
+    this.name = 'GeminiError';
+    this.reason = reason;
+    this.status = status;
+  }
+}
+
+/**
+ * Normalizes any caught error into a typed GeminiError.
+ * @param {unknown} err
+ * @returns {GeminiError}
+ */
+export function classifyGeminiError(err) {
+  if (err instanceof GeminiError) {
+    return err;
+  }
+  if (err instanceof Error && (err.name === 'AbortError' || /timeout/i.test(err.message))) {
+    return new GeminiError('timeout', 'Gemini API request timed out');
+  }
+  if (
+    err instanceof SyntaxError ||
+    (err instanceof Error && /invalid json|JSON\.parse/i.test(err.message))
+  ) {
+    return new GeminiError('invalid_json', 'Gemini response is not valid JSON');
+  }
+  if (err instanceof Error && /schema|missing required/i.test(err.message)) {
+    return new GeminiError('schema_mismatch', 'Gemini response schema mismatch');
+  }
+  if (err instanceof Error && /empty response|no candidate/i.test(err.message)) {
+    return new GeminiError('empty_response', 'Empty response candidate returned from Gemini');
+  }
+  if (err instanceof Error && /missing.*key|API_KEY/i.test(err.message)) {
+    return new GeminiError('missing_key', 'GEMINI_API_KEY environment variable is not configured');
+  }
+  const message = err instanceof Error ? err.message : 'Unknown Gemini error';
+  const statusMatch = message.match(/\b(4\d\d|5\d\d)\b/);
+  const status = statusMatch ? parseInt(statusMatch[1], 10) : undefined;
+  return new GeminiError('http_error', message, status);
+}
 
 /**
  * Sleeps for a designated millisecond duration.
@@ -17,44 +73,76 @@ function wait(ms) {
 }
 
 /**
- * Calls the Gemini API with timeout and single 5xx retry.
+ * Validates that an API key is configured and non-placeholder.
+ * @param {string | undefined} key
+ * @returns {string} Valid API key.
+ */
+function resolveApiKey(key) {
+  if (!key || typeof key !== 'string' || !key.trim() || key === 'your_gemini_api_key_here') {
+    throw new GeminiError('missing_key', 'GEMINI_API_KEY environment variable is not configured');
+  }
+  return key.trim();
+}
+
+/**
+ * Validates parsed JSON output against required fields.
+ * @param {string} textOutput
+ * @param {string[]} [requiredKeys]
+ * @returns {string} Valid JSON text.
+ */
+function validateJsonOutput(textOutput, requiredKeys) {
+  let parsed;
+  try {
+    parsed = JSON.parse(textOutput);
+  } catch {
+    throw new GeminiError('invalid_json', 'Gemini response is not valid JSON');
+  }
+
+  if (!parsed || typeof parsed !== 'object') {
+    throw new GeminiError('schema_mismatch', 'Gemini response is not a valid JSON object');
+  }
+
+  if (Array.isArray(requiredKeys)) {
+    for (const key of requiredKeys) {
+      if (parsed[key] === undefined || parsed[key] === null) {
+        throw new GeminiError(
+          'schema_mismatch',
+          `Gemini response missing required schema property: ${key}`
+        );
+      }
+    }
+  }
+
+  return textOutput;
+}
+
+/**
+ * Calls the Gemini API with timeout, single 5xx retry, and typed error classification.
  * @param {string} prompt - User prompt text.
  * @param {string} [systemInstruction=''] - Optional system prompt.
  * @param {Object} [options={}]
  * @param {boolean} [options.jsonMode=false] - Whether to enforce application/json output.
  * @param {object} [options.responseSchema] - Optional JSON schema for structured generation.
+ * @param {string[]} [options.requiredKeys] - Array of expected top-level keys for schema validation.
  * @param {number} [options.timeoutMs=DEFAULT_TIMEOUT_MS] - Millisecond timeout.
- * @returns {Promise<string>}
+ * @returns {Promise<string>} Cleaned text response.
  */
 export async function callGemini(prompt, systemInstruction = '', options = {}) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY environment variable is not configured');
-  }
-
+  const apiKey = resolveApiKey(process.env.GEMINI_API_KEY);
   const model = process.env.GEMINI_MODEL || DEFAULT_MODEL;
   const timeoutMs = options.timeoutMs || DEFAULT_TIMEOUT_MS;
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`;
 
   const payload = {
-    contents: [
-      {
-        role: 'user',
-        parts: [{ text: prompt }]
-      }
-    ]
+    contents: [{ role: 'user', parts: [{ text: prompt }] }]
   };
 
   if (systemInstruction) {
-    payload.systemInstruction = {
-      parts: [{ text: systemInstruction }]
-    };
+    payload.systemInstruction = { parts: [{ text: systemInstruction }] };
   }
 
   if (options.jsonMode || options.responseSchema) {
-    payload.generationConfig = {
-      responseMimeType: 'application/json'
-    };
+    payload.generationConfig = { responseMimeType: 'application/json' };
     if (options.responseSchema) {
       payload.generationConfig.responseSchema = options.responseSchema;
     }
@@ -81,26 +169,39 @@ export async function callGemini(prompt, systemInstruction = '', options = {}) {
       if (response.ok) {
         const data = await response.json();
         const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!textOutput) {
-          throw new Error('Empty response candidate returned from Gemini');
+        if (!textOutput || !textOutput.trim()) {
+          throw new GeminiError('empty_response', 'Empty response candidate returned from Gemini');
         }
-        return textOutput.trim();
+
+        const trimmed = textOutput.trim();
+        if (options.jsonMode || options.responseSchema || options.requiredKeys) {
+          validateJsonOutput(trimmed, options.requiredKeys);
+        }
+        return trimmed;
       }
 
-      // If server error (5xx) and first attempt, retry once
       if (response.status >= 500 && attempts === 1) {
         await wait(RETRY_DELAY_MS);
         continue;
       }
 
-      const status = response.status;
-      throw new Error(`Gemini API error (HTTP ${status})`);
+      throw new GeminiError(
+        'http_error',
+        `Gemini API error (HTTP ${response.status})`,
+        response.status
+      );
     } catch (err) {
       clearTimeout(timeoutId);
       const isAbort = err instanceof Error && err.name === 'AbortError';
-      lastError = isAbort ? new Error('Gemini API request timed out') : err;
+      lastError = isAbort
+        ? new GeminiError('timeout', 'Gemini API request timed out')
+        : classifyGeminiError(err);
 
-      if (attempts === 1 && !isAbort) {
+      if (
+        attempts === 1 &&
+        !isAbort &&
+        !(err instanceof GeminiError && err.status && err.status < 500)
+      ) {
         await wait(RETRY_DELAY_MS);
         continue;
       }
@@ -108,5 +209,5 @@ export async function callGemini(prompt, systemInstruction = '', options = {}) {
     }
   }
 
-  throw lastError || new Error('Failed to communicate with Gemini API');
+  throw lastError || new GeminiError('http_error', 'Failed to communicate with Gemini API');
 }

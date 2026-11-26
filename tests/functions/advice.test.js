@@ -66,6 +66,7 @@ describe('Advice Generator API Function', () => {
   });
 
   it('degrades gracefully to deterministic fallback on Gemini failure', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     globalThis.fetch = vi.fn().mockRejectedValue(new Error('Gemini API 503 service unavailable'));
 
     const payload = {
@@ -86,9 +87,35 @@ describe('Advice Generator API Function', () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.fallback).toBe(true);
+    expect(data.fallbackReason).toBe('http_error (503)');
     expect(data.summary).toContain('210');
     expect(data.dailyPlan).toBeDefined();
     expect(data.indoorTips.length).toBeGreaterThan(0);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[advice] fallback: http_error (HTTP 503)')
+    );
+  });
+
+  it('reports missing_key fallbackReason when GEMINI_API_KEY is missing', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    delete process.env.GEMINI_API_KEY;
+
+    const payload = {
+      profile: { location: { name: 'Delhi' } },
+      airSnapshot: { aqi: 150 }
+    };
+
+    const req = new Request('http://localhost/api/advice', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    const res = await handler(req);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.fallback).toBe(true);
+    expect(data.fallbackReason).toBe('missing_key');
+    expect(warnSpy).toHaveBeenCalledWith('[advice] fallback: missing_key');
   });
 
   it('rejects invalid or empty request payloads with 400', async () => {

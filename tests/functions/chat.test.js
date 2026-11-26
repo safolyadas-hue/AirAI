@@ -46,6 +46,7 @@ describe('CleanAir Chat Assistant API Function', () => {
   });
 
   it('returns safe fallback guidance when AI call times out or fails', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     globalThis.fetch = vi.fn().mockRejectedValue(new Error('Connection timeout'));
 
     const payload = {
@@ -61,7 +62,34 @@ describe('CleanAir Chat Assistant API Function', () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.fallback).toBe(true);
+    expect(data.fallbackReason).toBe('timeout');
     expect(data.reply).toContain('offline mode');
+    expect(warnSpy).toHaveBeenCalledWith('[chat] fallback: timeout');
+  });
+
+  it('reports http_error with status in fallbackReason on server error', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({})
+    });
+
+    const payload = {
+      message: 'What should I do during high smog?'
+    };
+
+    const req = new Request('http://localhost/api/chat', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    const res = await handler(req);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.fallback).toBe(true);
+    expect(data.fallbackReason).toBe('http_error (500)');
+    expect(warnSpy).toHaveBeenCalledWith('[chat] fallback: http_error (HTTP 500)');
   });
 
   it('rejects oversized or invalid messages with 400', async () => {

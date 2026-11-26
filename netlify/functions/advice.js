@@ -7,7 +7,7 @@
 import { json, errorResponse, methodGuard, safeParseJson } from './lib/http.js';
 import { validateProfilePayload } from './lib/validate.js';
 import { enforceRateLimit } from './lib/rateLimit.js';
-import { callGemini } from './lib/gemini.js';
+import { callGemini, classifyGeminiError, GeminiError } from './lib/gemini.js';
 import { ADVICE_SYSTEM_PROMPT, buildAdviceUserPrompt } from './lib/prompts.js';
 
 export const config = {
@@ -67,12 +67,14 @@ const ADVICE_RESPONSE_SCHEMA = {
  * @param {object} profile
  * @param {object} airSnapshot
  * @param {Array<object>} rulesOutput
+ * @param {string} [fallbackReason='unknown']
  * @returns {object}
  */
-function createFallbackAdvice(profile, airSnapshot, rulesOutput = []) {
+function createFallbackAdvice(profile, airSnapshot, rulesOutput = [], fallbackReason = 'unknown') {
   const aqi = airSnapshot?.aqi ?? 150;
   return {
     fallback: true,
+    fallbackReason,
     summary: `Current AQI is ${aqi}. Protective rules have been generated directly by our deterministic clean air engine.`,
     familyNarrative: `Tailored advisory for ${profile?.location?.name || 'your area'} based on WHO and EPA pollution guidelines.`,
     dailyPlan: {
@@ -133,18 +135,38 @@ export default async function handler(req) {
     const rawAiResponse = await callGemini(prompt, ADVICE_SYSTEM_PROMPT, {
       jsonMode: true,
       responseSchema: ADVICE_RESPONSE_SCHEMA,
+      requiredKeys: [
+        'summary',
+        'familyNarrative',
+        'dailyPlan',
+        'indoorTips',
+        'swaps',
+        'impactExplanations',
+        'motivation'
+      ],
       timeoutMs: 6500
     });
 
     const parsed = JSON.parse(rawAiResponse);
     if (!parsed || typeof parsed !== 'object' || !parsed.summary) {
-      throw new Error('AI output failed schema validation');
+      throw new GeminiError('schema_mismatch', 'AI output failed schema validation');
     }
 
     return json({ ...parsed, fallback: false });
-  } catch (_err) {
-    // Graceful degradation: return deterministic fallback so client renders rules engine output
-    const fallbackPayload = createFallbackAdvice(profile, safeSnapshot, rulesOutput);
+  } catch (err) {
+    const geminiErr = classifyGeminiError(err);
+    const statusPart = geminiErr.status ? ` (HTTP ${geminiErr.status})` : '';
+    console.warn(`[advice] fallback: ${geminiErr.reason}${statusPart}`);
+
+    const fallbackReason = geminiErr.status
+      ? `${geminiErr.reason} (${geminiErr.status})`
+      : geminiErr.reason;
+    const fallbackPayload = createFallbackAdvice(
+      profile,
+      safeSnapshot,
+      rulesOutput,
+      fallbackReason
+    );
     return json(fallbackPayload, 200);
   }
 }

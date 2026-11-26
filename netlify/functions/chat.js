@@ -7,7 +7,7 @@
 import { json, errorResponse, methodGuard, safeParseJson } from './lib/http.js';
 import { validateChatPayload } from './lib/validate.js';
 import { enforceRateLimit } from './lib/rateLimit.js';
-import { callGemini } from './lib/gemini.js';
+import { callGemini, classifyGeminiError } from './lib/gemini.js';
 import { CHAT_SYSTEM_PROMPT, buildChatUserPrompt } from './lib/prompts.js';
 
 export const config = {
@@ -46,8 +46,15 @@ export default async function handler(req) {
     const reply = await callGemini(prompt, CHAT_SYSTEM_PROMPT, {
       timeoutMs: 6500
     });
-    return json({ reply });
-  } catch (_err) {
-    return json({ reply: FALLBACK_CHAT_REPLY, fallback: true });
+    return json({ reply, fallback: false });
+  } catch (err) {
+    const geminiErr = classifyGeminiError(err);
+    const statusPart = geminiErr.status ? ` (HTTP ${geminiErr.status})` : '';
+    console.warn(`[chat] fallback: ${geminiErr.reason}${statusPart}`);
+
+    const fallbackReason = geminiErr.status
+      ? `${geminiErr.reason} (${geminiErr.status})`
+      : geminiErr.reason;
+    return json({ reply: FALLBACK_CHAT_REPLY, fallback: true, fallbackReason });
   }
 }

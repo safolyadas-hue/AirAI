@@ -12,20 +12,29 @@ import chatHandler from '../netlify/functions/chat.js';
 
 let totalChecks = 0;
 let passedChecks = 0;
+let warnedChecks = 0;
+let failedChecks = 0;
 
 /**
- * Executes a test assertion block and records pass/fail.
+ * Executes a test assertion block and records pass/warn/fail.
  * @param {string} name - Test name description.
- * @param {() => Promise<string | void>} fn - Test execution function.
+ * @param {() => Promise<string | { warn: boolean, detail: string } | void>} fn - Test execution function.
  */
 async function runCheck(name, fn) {
   totalChecks += 1;
   const num = totalChecks;
   try {
-    const detail = await fn();
-    passedChecks += 1;
-    console.log(`[PASS] Check ${num}: ${name}${detail ? ` - ${detail}` : ''}`);
+    const result = await fn();
+    if (result && typeof result === 'object' && result.warn) {
+      warnedChecks += 1;
+      console.log(`[WARN] Check ${num}: ${name}${result.detail ? ` - ${result.detail}` : ''}`);
+    } else {
+      passedChecks += 1;
+      const detail = typeof result === 'string' ? result : '';
+      console.log(`[PASS] Check ${num}: ${name}${detail ? ` - ${detail}` : ''}`);
+    }
   } catch (err) {
+    failedChecks += 1;
     const message = err instanceof Error ? err.message : String(err);
     console.error(`[FAIL] Check ${num}: ${name}\n       Reason: ${message}`);
   }
@@ -147,7 +156,10 @@ async function checkAdvice(base, airSnapshot, hourly) {
   const data = await res.json();
 
   if (data.fallback === true) {
-    return 'Mode: {fallback: true} (deterministic rules engine fallback rendered)';
+    return {
+      warn: true,
+      detail: `Mode: {fallback: true} (Reason: ${data.fallbackReason || 'unknown'})`
+    };
   }
   if (data.summary && data.dailyPlan) {
     return 'Mode: {AI GENERATED} (structured Gemini JSON response returned)';
@@ -176,6 +188,12 @@ async function checkChatStandard(base) {
   }
 
   const snippet = data.reply.trim().replace(/\s+/g, ' ').slice(0, 100);
+  if (data.fallback === true) {
+    return {
+      warn: true,
+      detail: `Mode: {fallback: true} (Reason: ${data.fallbackReason || 'offline'}) - First 100 chars: "${snippet}..."`
+    };
+  }
   return `First 100 chars: "${snippet}..."`;
 }
 
@@ -315,7 +333,9 @@ async function isServerRunning(url) {
   try {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), 600);
-    const res = await fetch(`${url}/api/air-quality?lat=999&lon=77.21`, { signal: controller.signal });
+    const res = await fetch(`${url}/api/air-quality?lat=999&lon=77.21`, {
+      signal: controller.signal
+    });
     clearTimeout(id);
     return res.status === 400 || res.status === 200;
   } catch {
@@ -386,10 +406,12 @@ async function main() {
   }
 
   console.log(`\n------------------------------------------------------`);
-  console.log(` Results: ${passedChecks}/${totalChecks} checks passed.`);
+  console.log(
+    ` Results: ${passedChecks} passed, ${warnedChecks} warned, ${failedChecks} failed (out of ${totalChecks} checks).`
+  );
   console.log(`------------------------------------------------------\n`);
 
-  if (passedChecks < totalChecks) {
+  if (failedChecks > 0) {
     process.exit(1);
   } else {
     process.exit(0);

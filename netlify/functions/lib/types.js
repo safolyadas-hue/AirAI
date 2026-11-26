@@ -70,6 +70,15 @@
  * @property {Array<{ actionId: string, explanation: string }>} impactExplanations
  * @property {string} motivation
  * @property {boolean} [fallback]
+ * @property {string} [fallbackReason]
+ */
+
+/**
+ * CleanAir Chat Output schema
+ * @typedef {Object} ChatOutput
+ * @property {string} reply
+ * @property {boolean} [fallback]
+ * @property {string} [fallbackReason]
  */
 
 export {};
