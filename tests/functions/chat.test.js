@@ -43,6 +43,10 @@ describe('CleanAir Chat Assistant API Function', () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.reply).toContain('N95 respirator');
+
+    const callInit = globalThis.fetch.mock.calls[0][1];
+    const sentBody = JSON.parse(callInit.body);
+    expect(sentBody.generationConfig.maxOutputTokens).toBe(400);
   });
 
   it('returns safe fallback guidance when AI call times out or fails', async () => {

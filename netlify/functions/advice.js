@@ -7,7 +7,7 @@
 import { json, errorResponse, methodGuard, safeParseJson } from './lib/http.js';
 import { validateProfilePayload } from './lib/validate.js';
 import { enforceRateLimit } from './lib/rateLimit.js';
-import { callGemini, classifyGeminiError, GeminiError } from './lib/gemini.js';
+import { callGemini, classifyGeminiError, GeminiError, GEMINI_CONFIG } from './lib/gemini.js';
 import { ADVICE_SYSTEM_PROMPT, buildAdviceUserPrompt } from './lib/prompts.js';
 
 export const config = {
@@ -61,6 +61,46 @@ const ADVICE_RESPONSE_SCHEMA = {
     'motivation'
   ]
 };
+
+/**
+ * Extracts a compact air quality snapshot to reduce prompt token footprint.
+ * @param {object} airSnapshot
+ * @returns {{ aqi: number, pm2_5?: number, dominantPollutant: string }}
+ */
+export function createCompactAirSnapshot(airSnapshot) {
+  const aqi = typeof airSnapshot?.aqi === 'number' ? airSnapshot.aqi : 150;
+  const dominant =
+    typeof airSnapshot?.dominantPollutant === 'string'
+      ? airSnapshot.dominantPollutant
+      : airSnapshot?.dominantPollutant?.pollutant || 'pm2_5';
+  return {
+    aqi,
+    pm2_5: typeof airSnapshot?.pm2_5 === 'number' ? airSnapshot.pm2_5 : undefined,
+    dominantPollutant: dominant
+  };
+}
+
+/**
+ * Trims rules output to the top N actions sorted by priority (lowest number = highest priority).
+ * Strips unnecessary fields to keep prompt compact.
+ * @param {Array<object>} [rulesOutput=[]]
+ * @param {number} [limit=6]
+ * @returns {Array<object>}
+ */
+export function trimRulesOutput(rulesOutput = [], limit = 6) {
+  if (!Array.isArray(rulesOutput)) return [];
+  return [...rulesOutput]
+    .sort((a, b) => (Number(a.priority) || 5) - (Number(b.priority) || 5))
+    .slice(0, limit)
+    .map((act) => ({
+      id: act.id,
+      title: act.title,
+      category: act.category,
+      timeOfDay: act.timeOfDay,
+      why: act.why,
+      priority: act.priority
+    }));
+}
 
 /**
  * Creates deterministic fallback payload when AI generation fails.
@@ -123,13 +163,10 @@ export default async function handler(req) {
   const profileResult = validateProfilePayload(rawProfile);
   const profile = profileResult.value;
 
-  const currentAqi = typeof airSnapshot?.aqi === 'number' ? airSnapshot.aqi : 150;
-  const safeSnapshot = {
-    ...airSnapshot,
-    aqi: currentAqi
-  };
+  const compactSnapshot = createCompactAirSnapshot(airSnapshot);
+  const trimmedRules = trimRulesOutput(rulesOutput, 6);
 
-  const prompt = buildAdviceUserPrompt(profile, safeSnapshot, rulesOutput);
+  const prompt = buildAdviceUserPrompt(profile, compactSnapshot, trimmedRules);
 
   try {
     const rawAiResponse = await callGemini(prompt, ADVICE_SYSTEM_PROMPT, {
@@ -144,7 +181,8 @@ export default async function handler(req) {
         'impactExplanations',
         'motivation'
       ],
-      timeoutMs: 6500
+      timeoutMs: GEMINI_CONFIG.ADVICE_TIMEOUT_MS,
+      maxOutputTokens: GEMINI_CONFIG.ADVICE_MAX_OUTPUT_TOKENS
     });
 
     const parsed = JSON.parse(rawAiResponse);
@@ -163,8 +201,8 @@ export default async function handler(req) {
       : geminiErr.reason;
     const fallbackPayload = createFallbackAdvice(
       profile,
-      safeSnapshot,
-      rulesOutput,
+      compactSnapshot,
+      trimmedRules,
       fallbackReason
     );
     return json(fallbackPayload, 200);

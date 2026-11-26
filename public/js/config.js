@@ -31,3 +31,12 @@ export const API_ENDPOINTS = Object.freeze({
   ADVICE: '/api/advice',
   CHAT: '/api/chat'
 });
+
+/**
+ * Gemini AI Service Timeout and Token Configuration
+ * Source: Tailored for low-latency serverless execution (20s structured advice, 12s chat).
+ */
+export const GEMINI_TIMEOUTS = Object.freeze({
+  ADVICE_MS: 20000,
+  CHAT_MS: 12000
+});

@@ -7,7 +7,7 @@
 import { json, errorResponse, methodGuard, safeParseJson } from './lib/http.js';
 import { validateChatPayload } from './lib/validate.js';
 import { enforceRateLimit } from './lib/rateLimit.js';
-import { callGemini, classifyGeminiError } from './lib/gemini.js';
+import { callGemini, classifyGeminiError, GEMINI_CONFIG } from './lib/gemini.js';
 import { CHAT_SYSTEM_PROMPT, buildChatUserPrompt } from './lib/prompts.js';
 
 export const config = {
@@ -44,7 +44,8 @@ export default async function handler(req) {
 
   try {
     const reply = await callGemini(prompt, CHAT_SYSTEM_PROMPT, {
-      timeoutMs: 6500
+      timeoutMs: GEMINI_CONFIG.CHAT_TIMEOUT_MS,
+      maxOutputTokens: GEMINI_CONFIG.CHAT_MAX_OUTPUT_TOKENS
     });
     return json({ reply, fallback: false });
   } catch (err) {

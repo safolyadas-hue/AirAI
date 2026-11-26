@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import handler from '../../netlify/functions/advice.js';
+import handler, {
+  createCompactAirSnapshot,
+  trimRulesOutput
+} from '../../netlify/functions/advice.js';
 
 describe('Advice Generator API Function', () => {
   const originalFetch = globalThis.fetch;
@@ -13,6 +16,50 @@ describe('Advice Generator API Function', () => {
   afterEach(() => {
     globalThis.fetch = originalFetch;
     process.env.GEMINI_API_KEY = originalKey;
+  });
+
+  describe('Payload trimming helpers', () => {
+    it('creates compact airSnapshot retaining only essential fields', () => {
+      const bloated = {
+        aqi: 185,
+        pm2_5: 110,
+        pm10: 220,
+        co: 1.2,
+        dominantPollutant: { pollutant: 'pm2_5', value: 110, ratio: 3.5 },
+        extraData: 'some heavy metadata'
+      };
+
+      const compact = createCompactAirSnapshot(bloated);
+      expect(compact).toEqual({
+        aqi: 185,
+        pm2_5: 110,
+        dominantPollutant: 'pm2_5'
+      });
+    });
+
+    it('trims rules output to top 6 actions sorted by priority', () => {
+      const manyActions = [
+        { id: 'act-4', title: 'Four', priority: 4, extra: 'bloat' },
+        { id: 'act-1', title: 'One', priority: 1, extra: 'bloat' },
+        { id: 'act-5', title: 'Five', priority: 5, extra: 'bloat' },
+        { id: 'act-2', title: 'Two', priority: 2, extra: 'bloat' },
+        { id: 'act-3', title: 'Three', priority: 3, extra: 'bloat' },
+        { id: 'act-6', title: 'Six', priority: 6, extra: 'bloat' },
+        { id: 'act-7', title: 'Seven', priority: 7, extra: 'bloat' }
+      ];
+
+      const trimmed = trimRulesOutput(manyActions, 6);
+      expect(trimmed).toHaveLength(6);
+      expect(trimmed.map((a) => a.id)).toEqual([
+        'act-1',
+        'act-2',
+        'act-3',
+        'act-4',
+        'act-5',
+        'act-6'
+      ]);
+      expect(trimmed[0].extra).toBeUndefined();
+    });
   });
 
   it('generates structured advice via Gemini JSON mode', async () => {
@@ -63,6 +110,12 @@ describe('Advice Generator API Function', () => {
     expect(data.fallback).toBe(false);
     expect(data.summary).toBe(mockAdvice.summary);
     expect(data.dailyPlan.morning).toBeDefined();
+
+    // Verify fetch payload contains maxOutputTokens cap
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    const callInit = globalThis.fetch.mock.calls[0][1];
+    const sentBody = JSON.parse(callInit.body);
+    expect(sentBody.generationConfig.maxOutputTokens).toBe(1200);
   });
 
   it('degrades gracefully to deterministic fallback on Gemini failure', async () => {

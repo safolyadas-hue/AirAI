@@ -1,11 +1,21 @@
 /**
  * Google Gemini Generative AI Client
- * Native fetch integration with typed failure classification, timeout, retry, and secure key handling.
+ * Native fetch integration with typed failure classification, per-call timeout, and retry handling.
  */
 
-const DEFAULT_MODEL = 'gemini-2.5-flash';
-const DEFAULT_TIMEOUT_MS = 8000; // 8s timeout
-const RETRY_DELAY_MS = 500; // 500ms before retry on 5xx
+export const GEMINI_CONFIG = Object.freeze({
+  DEFAULT_MODEL: 'gemini-2.5-flash',
+  ADVICE_TIMEOUT_MS: 20000, // 20s timeout for advice (large structured output)
+  CHAT_TIMEOUT_MS: 12000, // 12s timeout for chat
+  DEFAULT_TIMEOUT_MS: 12000,
+  RETRY_DELAY_MS: 500, // 500ms before retry on 5xx
+  ADVICE_MAX_OUTPUT_TOKENS: 1200, // Token cap for structured advice
+  CHAT_MAX_OUTPUT_TOKENS: 400 // Token cap for concise chat replies
+});
+
+const DEFAULT_MODEL = GEMINI_CONFIG.DEFAULT_MODEL;
+const DEFAULT_TIMEOUT_MS = GEMINI_CONFIG.DEFAULT_TIMEOUT_MS;
+const RETRY_DELAY_MS = GEMINI_CONFIG.RETRY_DELAY_MS;
 
 /**
  * Standard classification reasons for Gemini API failures
@@ -118,6 +128,7 @@ function validateJsonOutput(textOutput, requiredKeys) {
 
 /**
  * Calls the Gemini API with timeout, single 5xx retry, and typed error classification.
+ * Never retries on timeout to avoid compounding latency.
  * @param {string} prompt - User prompt text.
  * @param {string} [systemInstruction=''] - Optional system prompt.
  * @param {Object} [options={}]
@@ -125,12 +136,16 @@ function validateJsonOutput(textOutput, requiredKeys) {
  * @param {object} [options.responseSchema] - Optional JSON schema for structured generation.
  * @param {string[]} [options.requiredKeys] - Array of expected top-level keys for schema validation.
  * @param {number} [options.timeoutMs=DEFAULT_TIMEOUT_MS] - Millisecond timeout.
+ * @param {number} [options.maxOutputTokens] - Optional maximum token length cap.
  * @returns {Promise<string>} Cleaned text response.
  */
 export async function callGemini(prompt, systemInstruction = '', options = {}) {
   const apiKey = resolveApiKey(process.env.GEMINI_API_KEY);
   const model = process.env.GEMINI_MODEL || DEFAULT_MODEL;
-  const timeoutMs = options.timeoutMs || DEFAULT_TIMEOUT_MS;
+  const timeoutMs =
+    typeof options.timeoutMs === 'number' && options.timeoutMs > 0
+      ? options.timeoutMs
+      : DEFAULT_TIMEOUT_MS;
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`;
 
   const payload = {
@@ -141,10 +156,16 @@ export async function callGemini(prompt, systemInstruction = '', options = {}) {
     payload.systemInstruction = { parts: [{ text: systemInstruction }] };
   }
 
-  if (options.jsonMode || options.responseSchema) {
-    payload.generationConfig = { responseMimeType: 'application/json' };
+  if (options.jsonMode || options.responseSchema || typeof options.maxOutputTokens === 'number') {
+    payload.generationConfig = {};
+    if (options.jsonMode || options.responseSchema) {
+      payload.generationConfig.responseMimeType = 'application/json';
+    }
     if (options.responseSchema) {
       payload.generationConfig.responseSchema = options.responseSchema;
+    }
+    if (typeof options.maxOutputTokens === 'number' && options.maxOutputTokens > 0) {
+      payload.generationConfig.maxOutputTokens = options.maxOutputTokens;
     }
   }
 
@@ -180,6 +201,7 @@ export async function callGemini(prompt, systemInstruction = '', options = {}) {
         return trimmed;
       }
 
+      // Single retry strictly on 5xx server errors
       if (response.status >= 500 && attempts === 1) {
         await wait(RETRY_DELAY_MS);
         continue;
@@ -197,14 +219,16 @@ export async function callGemini(prompt, systemInstruction = '', options = {}) {
         ? new GeminiError('timeout', 'Gemini API request timed out')
         : classifyGeminiError(err);
 
-      if (
-        attempts === 1 &&
-        !isAbort &&
-        !(err instanceof GeminiError && err.status && err.status < 500)
-      ) {
+      // Do NOT retry on timeout, client errors, or after max attempts
+      if (isAbort || lastError.reason === 'timeout' || attempts >= 2) {
+        break;
+      }
+
+      if (attempts === 1 && lastError.status && lastError.status >= 500) {
         await wait(RETRY_DELAY_MS);
         continue;
       }
+
       break;
     }
   }
