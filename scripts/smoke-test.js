@@ -188,6 +188,14 @@ async function checkChatStandard(base) {
   }
 
   const snippet = data.reply.trim().replace(/\s+/g, ' ').slice(0, 100);
+
+  if (data.reply.includes('$') || data.reply.includes('\\text')) {
+    return {
+      warn: true,
+      detail: `Contains unrendered LaTeX markup ("$" or "\\text") - First 100 chars: "${snippet}..."`
+    };
+  }
+
   if (data.fallback === true) {
     return {
       warn: true,

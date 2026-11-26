@@ -15,14 +15,18 @@ describe('CleanAir Chat Assistant API Function', () => {
     process.env.GEMINI_API_KEY = originalKey;
   });
 
-  it('responds with AI reply for valid air pollution queries', async () => {
+  it('responds with AI reply for valid air pollution queries and cleans LaTeX markup', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
         candidates: [
           {
             content: {
-              parts: [{ text: 'Wear a well-fitted N95 respirator and avoid morning exercise.' }]
+              parts: [
+                {
+                  text: 'Wear a well-fitted N95 respirator against $\\text{PM}_{2.5}$ at 150 $\\mu g/m^3$.'
+                }
+              ]
             }
           }
         ]
@@ -42,7 +46,9 @@ describe('CleanAir Chat Assistant API Function', () => {
     const res = await handler(req);
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(data.reply).toContain('N95 respirator');
+    expect(data.reply).toContain('N95 respirator against PM2.5 at 150 µg/m³.');
+    expect(data.reply).not.toContain('$\\text{PM}_{2.5}$');
+    expect(data.reply).not.toContain('$');
 
     const callInit = globalThis.fetch.mock.calls[0][1];
     const sentBody = JSON.parse(callInit.body);

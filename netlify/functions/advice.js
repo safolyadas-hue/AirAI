@@ -8,6 +8,7 @@ import { json, errorResponse, methodGuard, safeParseJson } from './lib/http.js';
 import { validateProfilePayload } from './lib/validate.js';
 import { enforceRateLimit } from './lib/rateLimit.js';
 import { callGemini, classifyGeminiError, GeminiError, GEMINI_CONFIG } from './lib/gemini.js';
+import { sanitizeModelPayload } from './lib/sanitize.js';
 import { ADVICE_SYSTEM_PROMPT, buildAdviceUserPrompt } from './lib/prompts.js';
 
 export const config = {
@@ -190,7 +191,8 @@ export default async function handler(req) {
       throw new GeminiError('schema_mismatch', 'AI output failed schema validation');
     }
 
-    return json({ ...parsed, fallback: false });
+    const cleaned = sanitizeModelPayload(parsed);
+    return json({ ...cleaned, fallback: false });
   } catch (err) {
     const geminiErr = classifyGeminiError(err);
     const statusPart = geminiErr.status ? ` (HTTP ${geminiErr.status})` : '';
@@ -205,6 +207,6 @@ export default async function handler(req) {
       trimmedRules,
       fallbackReason
     );
-    return json(fallbackPayload, 200);
+    return json(sanitizeModelPayload(fallbackPayload), 200);
   }
 }

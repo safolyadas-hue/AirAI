@@ -64,7 +64,8 @@ describe('Advice Generator API Function', () => {
 
   it('generates structured advice via Gemini JSON mode', async () => {
     const mockAdvice = {
-      summary: 'Air is currently unhealthy for your household with sensitive individuals.',
+      summary:
+        'Air has severe $\\text{PM}_{2.5}$ concentration at 150 $\\mu g/m^3$ for sensitive individuals.',
       familyNarrative:
         'Given your infant child and elderly parents, particulate exposure must be minimized.',
       dailyPlan: {
@@ -108,7 +109,10 @@ describe('Advice Generator API Function', () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.fallback).toBe(false);
-    expect(data.summary).toBe(mockAdvice.summary);
+    expect(data.summary).toBe(
+      'Air has severe PM2.5 concentration at 150 µg/m³ for sensitive individuals.'
+    );
+    expect(data.summary).not.toContain('$\\text{PM}_{2.5}$');
     expect(data.dailyPlan.morning).toBeDefined();
 
     // Verify fetch payload contains maxOutputTokens cap

@@ -14,7 +14,7 @@ export const config = {
   path: '/api/air-quality'
 };
 
-const TIMEOUT_MS = 5000; // 5s timeout per external request
+const TIMEOUT_MS = 8000; // 8s timeout per external request
 const CACHE_HEADER = { 'Cache-Control': 'public, max-age=600' };
 
 /**

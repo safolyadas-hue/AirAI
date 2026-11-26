@@ -8,6 +8,7 @@ import { json, errorResponse, methodGuard, safeParseJson } from './lib/http.js';
 import { validateChatPayload } from './lib/validate.js';
 import { enforceRateLimit } from './lib/rateLimit.js';
 import { callGemini, classifyGeminiError, GEMINI_CONFIG } from './lib/gemini.js';
+import { cleanModelText } from './lib/sanitize.js';
 import { CHAT_SYSTEM_PROMPT, buildChatUserPrompt } from './lib/prompts.js';
 
 export const config = {
@@ -43,10 +44,11 @@ export default async function handler(req) {
   const prompt = buildChatUserPrompt(message, context, history);
 
   try {
-    const reply = await callGemini(prompt, CHAT_SYSTEM_PROMPT, {
+    const rawReply = await callGemini(prompt, CHAT_SYSTEM_PROMPT, {
       timeoutMs: GEMINI_CONFIG.CHAT_TIMEOUT_MS,
       maxOutputTokens: GEMINI_CONFIG.CHAT_MAX_OUTPUT_TOKENS
     });
+    const reply = cleanModelText(rawReply);
     return json({ reply, fallback: false });
   } catch (err) {
     const geminiErr = classifyGeminiError(err);
@@ -56,6 +58,6 @@ export default async function handler(req) {
     const fallbackReason = geminiErr.status
       ? `${geminiErr.reason} (${geminiErr.status})`
       : geminiErr.reason;
-    return json({ reply: FALLBACK_CHAT_REPLY, fallback: true, fallbackReason });
+    return json({ reply: cleanModelText(FALLBACK_CHAT_REPLY), fallback: true, fallbackReason });
   }
 }
