@@ -24,9 +24,10 @@ body {
   line-height: var(--line-height-base);
   color: var(--color-text);
   background-color: var(--color-bg);
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -102,7 +103,7 @@ select,
 
 /* Links */
 a {
-  color: var(--color-accent);
+  color: var(--accent-text);
   text-decoration: underline;
   text-underline-offset: 3px;
   transition: color var(--duration-fast) var(--ease-standard);
@@ -124,10 +125,10 @@ a:hover {
   top: -120px;
   left: var(--space-4);
   background: var(--color-surface);
-  color: var(--color-accent);
+  color: var(--accent-text);
   padding: var(--space-3) var(--space-5);
   border-radius: var(--radius-sm);
-  border: 2px solid var(--color-accent);
+  border: 2px solid var(--accent-text);
   box-shadow: var(--shadow-lg);
   font-weight: 600;
   z-index: var(--z-modal);

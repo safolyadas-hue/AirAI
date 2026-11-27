@@ -20,7 +20,7 @@ import {
 import { showToast } from './ui/toast.js';
 import { DEMO_DATA_BY_CATEGORY, DEMO_TIMELINE_HOURLY } from './demo/demoData.js';
 import { renderTodayView } from './ui/dashboard.js';
-import { renderPlanView } from './ui/onboarding.js';
+import { renderPlanView } from './ui/plan.js';
 import { renderIndoorView } from './ui/indoor.js';
 import { renderSwapsView } from './ui/swaps.js';
 import { renderChat } from './ui/chat.js';
@@ -93,6 +93,12 @@ function renderActiveView(panel, shouldFocus = false) {
         categoryKey: catTheme,
         categoryLabel: catLabel,
         dominantPollutant: data.dominantPollutant,
+        pollutants: {
+          pm2_5: data.pm2_5,
+          pm10: data.pm10,
+          no2: data.no2,
+          o3: data.o3
+        },
         headline: data.headline,
         actions: data.actions,
         hourly: DEMO_TIMELINE_HOURLY
@@ -157,12 +163,22 @@ function createHeader() {
         { className: 'header-actions' },
         h(
           'span',
-          { className: 'chip', title: i18n.header.locationLabel },
+          { className: 'chip header-location-chip', title: i18n.header.locationLabel },
           icon('location', { size: 14 }),
           i18n.header.demoCity
         ),
         fontBtn,
         themeBtn
+      ),
+      h(
+        'div',
+        { className: 'header-location-subrow' },
+        h(
+          'span',
+          { className: 'chip', title: i18n.header.locationLabel },
+          icon('location', { size: 14 }),
+          i18n.header.demoCity
+        )
       )
     )
   );
@@ -344,7 +360,7 @@ export function initApp() {
         onClick: () => switchTab(t.id)
       },
       icon(t.icon, { size: 20 }),
-      h('span', {}, i18n.nav[t.id])
+      h('span', {}, i18n.nav[`${t.id}Short`] || i18n.nav[t.id])
     )
   );
 

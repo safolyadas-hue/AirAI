@@ -1,10 +1,9 @@
 /**
- * Community and Personal Clean Air Impact View
- * Visualizes avoided carbon emissions, indoor particulate reduction, and sustainability milestones.
+ * Clean Air Impact View
+ * Visualizes estimated weekly CO2 avoided and indoor PM2.5 reduction ranges with transparent assumptions.
  */
 import { h, clear, mount } from './dom.js';
 import { icon } from './icons.js';
-import { getImpactBadgeTier } from '../domain/impactFactors.js';
 import i18n from '../i18n/en.js';
 
 /**
@@ -18,7 +17,7 @@ import i18n from '../i18n/en.js';
 function createStatTile(title, value, unit, iconName) {
   return h(
     'div',
-    { className: 'stat-tile col-span-4' },
+    { className: 'stat-tile col-span-6' },
     h(
       'div',
       { style: { display: 'flex', alignItems: 'center', gap: 'var(--space-2)' } },
@@ -37,11 +36,13 @@ function createStatTile(title, value, unit, iconName) {
     ),
     h(
       'div',
-      { style: { display: 'flex', alignItems: 'baseline', gap: 'var(--space-2)' } },
+      {
+        style: { display: 'flex', alignItems: 'baseline', gap: 'var(--space-2)', flexWrap: 'wrap' }
+      },
       h('span', { className: 'stat-number tabular-nums' }, String(value)),
       h(
         'span',
-        { style: { fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' } },
+        { style: { fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' } },
         unit
       )
     )
@@ -49,17 +50,12 @@ function createStatTile(title, value, unit, iconName) {
 }
 
 /**
- * Renders the clean air impact metrics dashboard view.
+ * Renders the clean air impact estimates view.
  * @param {HTMLElement} container
  * @param {object} [props={}]
- * @param {number} [props.co2SavedKg=14.8]
- * @param {number} [props.indoorReduction=85]
- * @param {number} [props.streakDays=12]
+ * @param {number} [props.estimatedWeeklyCo2Kg=8.5]
  */
-export function renderImpact(
-  container,
-  { co2SavedKg = 14.8, indoorReduction = 85, streakDays = 12 } = {}
-) {
+export function renderImpact(container, { estimatedWeeklyCo2Kg = 8.5 } = {}) {
   clear(container);
 
   const header = h(
@@ -73,71 +69,63 @@ export function renderImpact(
     )
   );
 
-  const tier = getImpactBadgeTier(co2SavedKg);
-
-  const tile1 = createStatTile(
+  const co2Tile = createStatTile(
     i18n.impact.co2SavedTitle,
-    co2SavedKg.toFixed(2),
+    `~${estimatedWeeklyCo2Kg.toFixed(1)}`,
     i18n.impact.co2Metric,
     'leaf'
   );
-  const tile2 = createStatTile(
+
+  const indoorTile = createStatTile(
     i18n.impact.indoorReductionTitle,
-    `${indoorReduction}%`,
+    i18n.impact.indoorReductionRange,
     i18n.impact.indoorMetric,
     'home'
   );
-  const tile3 = createStatTile(
-    i18n.impact.routinesCompletedTitle,
-    streakDays,
-    i18n.impact.routinesMetric,
-    'shield'
-  );
 
-  const milestoneCard = h(
+  const assumptionsCard = h(
     'div',
-    {
-      className: 'card card-tinted col-span-12',
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: 'var(--space-4)'
-      }
-    },
+    { className: 'card card-tinted col-span-6' },
     h(
       'div',
-      { style: { display: 'flex', alignItems: 'center', gap: 'var(--space-3)' } },
-      icon('check', { size: 28, className: 'chip-accent' }),
-      h(
-        'div',
-        {},
-        h(
-          'h3',
-          { style: { fontSize: 'var(--font-size-md)' } },
-          `${i18n.impact.tierBadgeTitle}: ${tier.toUpperCase()}`
-        ),
-        h(
-          'p',
-          {
-            style: {
-              fontSize: 'var(--font-size-xs)',
-              color: 'var(--color-text-muted)',
-              marginBottom: 0
-            }
-          },
-          i18n.impact.equivalentTrees
-        )
-      )
+      {
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-2)',
+          marginBottom: 'var(--space-2)'
+        }
+      },
+      icon('info', { size: 18 }),
+      h('h3', { style: { fontSize: 'var(--font-size-md)' } }, i18n.impact.assumptionsTitle)
     ),
     h(
-      'span',
+      'p',
+      { style: { fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' } },
+      i18n.impact.assumptionsBody
+    )
+  );
+
+  const calculatorCard = h(
+    'div',
+    { className: 'card col-span-6' },
+    h(
+      'div',
       {
-        className: 'badge chip-accent',
-        style: { padding: 'var(--space-2) var(--space-4)', fontSize: 'var(--font-size-sm)' }
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-2)',
+          marginBottom: 'var(--space-2)'
+        }
       },
-      `${tier.toUpperCase()} TIER`
+      icon('bike', { size: 18 }),
+      h('h3', { style: { fontSize: 'var(--font-size-md)' } }, i18n.impact.calculatorTitle)
+    ),
+    h(
+      'p',
+      { style: { fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' } },
+      i18n.impact.calculatorBody
     )
   );
 
@@ -145,10 +133,10 @@ export function renderImpact(
     'div',
     { className: 'bento-grid animate-fade-up', 'aria-labelledby': 'impact-heading' },
     header,
-    tile1,
-    tile2,
-    tile3,
-    milestoneCard
+    co2Tile,
+    indoorTile,
+    assumptionsCard,
+    calculatorCard
   );
 
   mount(container, view);

@@ -1,6 +1,6 @@
 /**
  * Clear Sky Design System - Design Tokens
- * 
+ *
  * Breakpoint reference:
  * - Mobile: < 640px (single fluid column)
  * - Tablet: 640px - 1023px (2-column adaptive layout)
@@ -15,11 +15,11 @@
     'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Fluid Type Scale (clamp based) */
-  --font-size-2xs: clamp(0.7rem, 0.65rem + 0.25vw, 0.75rem);
-  --font-size-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.8125rem);
-  --font-size-sm: clamp(0.8125rem, 0.775rem + 0.25vw, 0.875rem);
-  --font-size-base: clamp(0.9375rem, 0.9rem + 0.2vw, 1rem);
+  /* Fluid Type Scale (enforces >= 12px chips/labels, >= 14px secondary, 16px body) */
+  --font-size-2xs: 0.75rem; /* 12px floor */
+  --font-size-xs: 0.75rem; /* 12px floor */
+  --font-size-sm: 0.875rem; /* 14px floor */
+  --font-size-base: 1rem; /* 16px body floor */
   --font-size-md: clamp(1.0625rem, 1rem + 0.3vw, 1.125rem);
   --font-size-lg: clamp(1.25rem, 1.15rem + 0.5vw, 1.375rem);
   --font-size-xl: clamp(1.5rem, 1.35rem + 0.75vw, 1.75rem);
@@ -45,6 +45,8 @@
   --space-10: 2.5rem; /* 40px */
   --space-12: 3rem; /* 48px */
   --space-16: 4rem; /* 64px */
+  --section-gap-mobile: 1rem;
+  --section-gap-desktop: 1.75rem;
 
   /* Border Radii */
   --radius-xs: 4px;
@@ -81,6 +83,7 @@
 
   /* Layout Boundaries */
   --content-max-width: 1200px;
+  --container-padding-inline: clamp(16px, 4vw, 32px);
   --min-touch-target: 44px;
 
   /* Base Light Color Roles (WCAG AA Compliant on #ffffff) */
@@ -95,12 +98,21 @@
   --color-focus-ring: #0284c7;
   --color-danger: #b91c1c;
   --color-success: #0a6c42;
+  --color-warning: #785100;
+  --color-success-soft: rgba(10, 108, 66, 0.12);
+  --color-warning-soft: rgba(120, 81, 0, 0.12);
+  --color-danger-soft: rgba(185, 28, 28, 0.12);
 
   /* Default Accent (Good - Teal Green) */
   --color-accent: #0a6c42;
   --color-accent-soft: #eaf7f0;
   --color-accent-strong: #054429;
   --color-accent-contrast: #ffffff;
+  --accent-text: #0a6c42;
+  --accent-fill: #0a6c42;
+  --on-accent: #ffffff;
+  --chip-bg: rgba(10, 108, 66, 0.12);
+  --chip-text: #054429;
 
   /* Atmospheric Haze Gradients (CSS-only) */
   --hero-gradient: linear-gradient(

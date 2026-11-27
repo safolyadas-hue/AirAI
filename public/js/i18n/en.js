@@ -13,11 +13,17 @@ export const i18n = Object.freeze({
   nav: {
     label: 'Main Navigation',
     today: 'Today',
+    todayShort: 'Today',
     plan: 'My Plan',
+    planShort: 'Plan',
     indoor: 'Indoor Air',
+    indoorShort: 'Indoor',
     swaps: 'Greener Swaps',
+    swapsShort: 'Swaps',
     ask: 'Ask Assistant',
-    impact: 'My Impact'
+    askShort: 'Ask',
+    impact: 'My Impact',
+    impactShort: 'Impact'
   },
   header: {
     locationLabel: 'Location',
@@ -56,12 +62,20 @@ export const i18n = Object.freeze({
     dominantPrefix: 'Main pollutant:',
     updatedJustNow: 'Updated 4 mins ago',
     hazeLabel: 'Smog inversion haze layer',
-    safeNotice: 'Conditions are safe for all outdoor activity.'
+    safeNotice: 'Conditions are safe for all outdoor activity.',
+    pollutants: {
+      pm2_5: 'PM2.5',
+      pm10: 'PM10',
+      no2: 'NO₂',
+      o3: 'O₃'
+    },
+    unitUgM3: 'µg/m³'
   },
   today: {
     heading: 'Today’s Air & Immediate Routines',
     riskBannerTitle: 'Today’s Air Quality Briefing',
     timelineTitle: '24-Hour Air Quality & Ventilation Windows',
+    timelineAriaLabel: '24-hour air quality forecast',
     timelineSubhead: 'Optimal times for outdoor errands, exercise, and window sealing.',
     bestWindowLabel: 'Cleanest Outdoor Window',
     worstWindowLabel: 'Peak Smog Window',
@@ -116,17 +130,20 @@ export const i18n = Object.freeze({
     disclaimer: 'Guidance only. Not medical advice. For persistent symptoms, consult a doctor.'
   },
   impact: {
-    heading: 'Your Environmental & Health Impact',
+    heading: 'Your Estimated Clean Air Impact',
     subheading:
-      'Real emissions avoided and particulate exposure reduced through sustainable routines.',
-    co2SavedTitle: 'CO₂ Emissions Avoided',
-    co2Metric: 'kg CO₂e',
-    indoorReductionTitle: 'Indoor PM2.5 Reduction',
-    indoorMetric: '% cleaner air',
-    routinesCompletedTitle: 'Routines Maintained',
-    routinesMetric: 'consecutive days',
-    tierBadgeTitle: 'Current Milestone Tier',
-    equivalentTrees: 'Equivalent to planting 3 mature urban trees.'
+      'Estimated emissions avoided and indoor exposure reduction based on typical household factors.',
+    co2SavedTitle: 'Estimated CO₂ Avoided per Week',
+    co2Metric: 'Estimated kg CO₂e / week',
+    indoorReductionTitle: 'Estimated Indoor PM2.5 Reduction',
+    indoorReductionRange: '30–50%',
+    indoorMetric: 'Estimated reduction range',
+    assumptionsTitle: 'Estimates & Assumptions',
+    assumptionsBody:
+      'Weekly CO₂ estimates use DEFRA urban transit conversion factors for a 10 km daily round trip. Indoor PM2.5 ranges reflect sealed-window + HEPA filtration studies and vary by room volume and air leakage.',
+    calculatorTitle: 'Emissions What-If Calculator (Coming Soon)',
+    calculatorBody:
+      'Compare commute modes, home heating, and filtration scenarios interactively once live location profiles are connected.'
   },
   components: {
     whyThis: 'Why this choice matters',

@@ -1,0 +1,96 @@
+/**
+ * Clear Sky Design System - Buttons, Chips & Badges
+ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  min-height: var(--min-touch-target);
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: all var(--duration-fast) var(--ease-standard);
+  user-select: none;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background-color: var(--accent-fill);
+  color: var(--on-accent);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-accent-strong);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-text-muted);
+  background-color: var(--color-surface-sunken);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-text-muted);
+}
+
+.btn-ghost:hover {
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text);
+}
+
+.btn-icon {
+  width: var(--min-touch-target);
+  height: var(--min-touch-target);
+  padding: 0;
+  border-radius: var(--radius-full);
+}
+
+.chip,
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.chip-accent {
+  background-color: var(--color-accent-soft);
+  color: var(--accent-text);
+  border: 1px solid var(--accent-text);
+}
+
+.badge-effort-low,
+.badge-cost-free {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.badge-effort-medium,
+.badge-cost-low {
+  background: var(--chip-bg);
+  color: var(--chip-text);
+}
+
+.badge-effort-high,
+.badge-cost-high {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}

@@ -1,0 +1,225 @@
+/**
+ * Clear Sky Design System - Cards, Hero & Circular AQI Gauge
+ */
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+@media (min-width: 640px) {
+  .card {
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+  }
+}
+
+.card-raised {
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-md);
+}
+
+.card-tinted {
+  background: var(--color-accent-soft);
+  border-color: var(--chip-bg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* Hero & Circular Gauge with Haze */
+.hero-card {
+  background: var(--hero-gradient);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-4);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+@media (min-width: 640px) {
+  .hero-card {
+    border-radius: var(--radius-xl);
+    padding: var(--space-8) var(--space-6);
+  }
+}
+
+.hero-haze-layer {
+  position: absolute;
+  inset: -40%;
+  pointer-events: none;
+  opacity: var(--hero-haze-opacity);
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, var(--color-accent) 0%, transparent 70%);
+  filter: blur(40px);
+  animation: driftHaze var(--duration-haze) ease-in-out infinite alternate;
+}
+
+.hero-haze-layer-2 {
+  animation-duration: 24000ms;
+  animation-direction: alternate-reverse;
+  opacity: calc(var(--hero-haze-opacity) * 0.7);
+}
+
+@keyframes driftHaze {
+  0% {
+    transform: translate(-5%, -5%) scale(1);
+  }
+  50% {
+    transform: translate(6%, 4%) scale(1.08);
+  }
+  100% {
+    transform: translate(-3%, 7%) scale(0.96);
+  }
+}
+
+.hero-content {
+  position: relative;
+  z-index: var(--z-base);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .hero-content {
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+    gap: var(--space-10);
+  }
+}
+
+.hero-text-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.gauge-svg-wrapper {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .gauge-svg-wrapper {
+    width: 220px;
+    height: 220px;
+  }
+}
+
+.gauge-svg {
+  transform: rotate(-90deg);
+  width: 100%;
+  height: 100%;
+}
+
+.gauge-track {
+  stroke: var(--color-border);
+  stroke-width: 12;
+  fill: none;
+}
+
+.gauge-fill {
+  stroke: var(--accent-text);
+  stroke-width: 12;
+  stroke-linecap: round;
+  fill: none;
+  transition:
+    stroke-dashoffset 900ms var(--ease-out),
+    stroke 400ms var(--ease-standard);
+}
+
+.gauge-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.gauge-number {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-3xl);
+  line-height: var(--line-height-tight);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.gauge-number--3digit {
+  font-size: var(--font-size-2xl);
+}
+
+.gauge-sublabel {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+/* Pollutant Readout Row */
+.pollutant-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+@media (min-width: 768px) {
+  .pollutant-row {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-3);
+  }
+}
+
+.pollutant-tile {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.pollutant-tile--dominant {
+  border-color: var(--accent-text);
+  background: var(--color-accent-soft);
+}
+
+.pollutant-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.pollutant-tile--dominant .pollutant-label {
+  color: var(--accent-text);
+}
+
+.pollutant-value {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text);
+}

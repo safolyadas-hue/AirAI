@@ -14,11 +14,28 @@ export function getRelativeLuminance(hex) {
 
   const toLinear = (c) => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
 
-  const rLinear = toLinear(r);
-  const gLinear = toLinear(g);
-  const bLinear = toLinear(b);
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+}
 
-  return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
+/**
+ * Alpha-composites a foreground hex + alpha over an opaque background hex.
+ * @param {string} fgHex
+ * @param {number} alpha
+ * @param {string} bgHex
+ * @returns {string}
+ */
+export function compositeOver(fgHex, alpha, bgHex) {
+  const parse = (h) => {
+    const c = h.replace('#', '');
+    return [parseInt(c.slice(0, 2), 16), parseInt(c.slice(2, 4), 16), parseInt(c.slice(4, 6), 16)];
+  };
+  const [fr, fg, fb] = parse(fgHex);
+  const [br, bg, bb] = parse(bgHex);
+  const mix = (f, b) =>
+    Math.round(f * alpha + b * (1 - alpha))
+      .toString(16)
+      .padStart(2, '0');
+  return `#${mix(fr, br)}${mix(fg, bg)}${mix(fb, bb)}`;
 }
 
 /**
@@ -38,91 +55,201 @@ export function getContrastRatio(hex1, hex2) {
 
 describe('WCAG AA Contrast Ratio Compliance', () => {
   const LIGHT_SURFACE = '#ffffff';
+  const LIGHT_SURFACE_RAISED = '#ffffff';
   const LIGHT_TEXT = '#0f172a';
   const LIGHT_TEXT_MUTED = '#475569';
 
   const DARK_SURFACE = '#131b2e';
+  const DARK_SURFACE_RAISED = '#1a243b';
   const DARK_TEXT = '#f8fafc';
   const DARK_TEXT_MUTED = '#94a3b8';
 
   const THEMES_LIGHT = {
-    good: { accent: '#0a6c42', contrastText: '#ffffff' },
-    moderate: { accent: '#785100', contrastText: '#ffffff' },
-    usg: { accent: '#9e3f00', contrastText: '#ffffff' },
-    unhealthy: { accent: '#b91c1c', contrastText: '#ffffff' },
-    'very-unhealthy': { accent: '#6b21a8', contrastText: '#ffffff' },
-    hazardous: { accent: '#831843', contrastText: '#ffffff' }
+    good: {
+      accentText: '#0a6c42',
+      accentFill: '#0a6c42',
+      onAccent: '#ffffff',
+      accentSoft: '#eaf7f0',
+      chipBg: compositeOver('#0a6c42', 0.12, LIGHT_SURFACE),
+      chipText: '#054429',
+      heroStops: ['#eaf7f0', '#f8fafc']
+    },
+    moderate: {
+      accentText: '#785100',
+      accentFill: '#785100',
+      onAccent: '#ffffff',
+      accentSoft: '#fef8e7',
+      chipBg: compositeOver('#785100', 0.12, LIGHT_SURFACE),
+      chipText: '#523700',
+      heroStops: ['#fef8e7', '#f8fafc']
+    },
+    usg: {
+      accentText: '#9e3f00',
+      accentFill: '#9e3f00',
+      onAccent: '#ffffff',
+      accentSoft: '#fff2e8',
+      chipBg: compositeOver('#9e3f00', 0.12, LIGHT_SURFACE),
+      chipText: '#662800',
+      heroStops: ['#fff2e8', '#f8fafc']
+    },
+    unhealthy: {
+      accentText: '#b91c1c',
+      accentFill: '#b91c1c',
+      onAccent: '#ffffff',
+      accentSoft: '#fef2f2',
+      chipBg: compositeOver('#b91c1c', 0.12, LIGHT_SURFACE),
+      chipText: '#7f1d1d',
+      heroStops: ['#fef2f2', '#f8fafc']
+    },
+    'very-unhealthy': {
+      accentText: '#6b21a8',
+      accentFill: '#6b21a8',
+      onAccent: '#ffffff',
+      accentSoft: '#faf5ff',
+      chipBg: compositeOver('#6b21a8', 0.12, LIGHT_SURFACE),
+      chipText: '#4c1d95',
+      heroStops: ['#faf5ff', '#f8fafc']
+    },
+    hazardous: {
+      accentText: '#831843',
+      accentFill: '#831843',
+      onAccent: '#ffffff',
+      accentSoft: '#fdf2f8',
+      chipBg: compositeOver('#831843', 0.12, LIGHT_SURFACE),
+      chipText: '#500724',
+      heroStops: ['#fdf2f8', '#f8fafc']
+    }
   };
 
   const THEMES_DARK = {
-    good: { accent: '#34d399', contrastText: '#0b111e' },
-    moderate: { accent: '#fbbf24', contrastText: '#0b111e' },
-    usg: { accent: '#fb923c', contrastText: '#0b111e' },
-    unhealthy: { accent: '#f87171', contrastText: '#0b111e' },
-    'very-unhealthy': { accent: '#c084fc', contrastText: '#0b111e' },
-    hazardous: { accent: '#fb7185', contrastText: '#0b111e' }
+    good: {
+      accentText: '#34d399',
+      accentFill: '#34d399',
+      onAccent: '#0b111e',
+      accentSoft: compositeOver('#34d399', 0.15, DARK_SURFACE),
+      chipBg: compositeOver('#34d399', 0.18, DARK_SURFACE),
+      chipText: '#6ee7b7',
+      heroStops: [compositeOver('#064e3b', 0.35, DARK_SURFACE), DARK_SURFACE]
+    },
+    moderate: {
+      accentText: '#fbbf24',
+      accentFill: '#fbbf24',
+      onAccent: '#0b111e',
+      accentSoft: compositeOver('#fbbf24', 0.15, DARK_SURFACE),
+      chipBg: compositeOver('#fbbf24', 0.18, DARK_SURFACE),
+      chipText: '#fcd34d',
+      heroStops: [compositeOver('#785100', 0.35, DARK_SURFACE), DARK_SURFACE]
+    },
+    usg: {
+      accentText: '#fb923c',
+      accentFill: '#fb923c',
+      onAccent: '#0b111e',
+      accentSoft: compositeOver('#fb923c', 0.15, DARK_SURFACE),
+      chipBg: compositeOver('#fb923c', 0.18, DARK_SURFACE),
+      chipText: '#fdba74',
+      heroStops: [compositeOver('#9e3f00', 0.35, DARK_SURFACE), DARK_SURFACE]
+    },
+    unhealthy: {
+      accentText: '#f87171',
+      accentFill: '#f87171',
+      onAccent: '#0b111e',
+      accentSoft: compositeOver('#f87171', 0.15, DARK_SURFACE),
+      chipBg: compositeOver('#f87171', 0.18, DARK_SURFACE),
+      chipText: '#fca5a5',
+      heroStops: [compositeOver('#b91c1c', 0.35, DARK_SURFACE), DARK_SURFACE]
+    },
+    'very-unhealthy': {
+      accentText: '#c084fc',
+      accentFill: '#c084fc',
+      onAccent: '#0b111e',
+      accentSoft: compositeOver('#c084fc', 0.15, DARK_SURFACE),
+      chipBg: compositeOver('#c084fc', 0.18, DARK_SURFACE),
+      chipText: '#d8b4fe',
+      heroStops: [compositeOver('#6b21a8', 0.35, DARK_SURFACE), DARK_SURFACE]
+    },
+    hazardous: {
+      accentText: '#fb7185',
+      accentFill: '#fb7185',
+      onAccent: '#0b111e',
+      accentSoft: compositeOver('#fb7185', 0.15, DARK_SURFACE),
+      chipBg: compositeOver('#fb7185', 0.18, DARK_SURFACE),
+      chipText: '#fda4af',
+      heroStops: [compositeOver('#831843', 0.35, DARK_SURFACE), DARK_SURFACE]
+    }
   };
 
-  describe('Light Mode Base Surfaces', () => {
-    it('main text meets WCAG AAA (> 7.0:1) on white surface', () => {
-      const ratio = getContrastRatio(LIGHT_TEXT, LIGHT_SURFACE);
-      expect(ratio).toBeGreaterThanOrEqual(7.0);
+  describe('Light Mode Surfaces & Token Roles', () => {
+    it('main and muted text meet WCAG AA/AAA on light surface', () => {
+      expect(getContrastRatio(LIGHT_TEXT, LIGHT_SURFACE)).toBeGreaterThanOrEqual(7.0);
+      expect(getContrastRatio(LIGHT_TEXT_MUTED, LIGHT_SURFACE)).toBeGreaterThanOrEqual(4.5);
     });
 
-    it('muted text meets WCAG AA (> 4.5:1) on white surface', () => {
-      const ratio = getContrastRatio(LIGHT_TEXT_MUTED, LIGHT_SURFACE);
-      expect(ratio).toBeGreaterThanOrEqual(4.5);
-    });
-
-    it('every light mode AQI accent meets WCAG AA (> 4.5:1) on white surface', () => {
-      for (const [theme, colors] of Object.entries(THEMES_LIGHT)) {
-        const ratio = getContrastRatio(colors.accent, LIGHT_SURFACE);
+    it('every light category passes all token-role contrast pairs (>= 4.5:1)', () => {
+      for (const [theme, c] of Object.entries(THEMES_LIGHT)) {
         expect(
-          ratio,
-          `Theme "${theme}" accent ${colors.accent} failed WCAG AA on white`
+          getContrastRatio(c.accentText, LIGHT_SURFACE),
+          `${theme} accentText/surface`
         ).toBeGreaterThanOrEqual(4.5);
-      }
-    });
-
-    it('button white text meets WCAG AA (> 4.5:1) on every light accent button', () => {
-      for (const [theme, colors] of Object.entries(THEMES_LIGHT)) {
-        const ratio = getContrastRatio(colors.contrastText, colors.accent);
         expect(
-          ratio,
-          `Theme "${theme}" white text failed on accent button ${colors.accent}`
+          getContrastRatio(c.accentText, LIGHT_SURFACE_RAISED),
+          `${theme} accentText/raised`
         ).toBeGreaterThanOrEqual(4.5);
+        expect(
+          getContrastRatio(c.accentText, c.accentSoft),
+          `${theme} accentText/soft`
+        ).toBeGreaterThanOrEqual(4.5);
+        expect(
+          getContrastRatio(c.onAccent, c.accentFill),
+          `${theme} onAccent/accentFill`
+        ).toBeGreaterThanOrEqual(4.5);
+        expect(
+          getContrastRatio(c.chipText, c.chipBg),
+          `${theme} chipText/chipBg`
+        ).toBeGreaterThanOrEqual(4.5);
+        for (const stop of c.heroStops) {
+          expect(
+            getContrastRatio(LIGHT_TEXT, stop),
+            `${theme} hero text/${stop}`
+          ).toBeGreaterThanOrEqual(4.5);
+        }
       }
     });
   });
 
-  describe('Dark Mode Base Surfaces', () => {
-    it('main text meets WCAG AAA (> 7.0:1) on dark surface', () => {
-      const ratio = getContrastRatio(DARK_TEXT, DARK_SURFACE);
-      expect(ratio).toBeGreaterThanOrEqual(7.0);
+  describe('Dark Mode Surfaces & Token Roles', () => {
+    it('main and muted text meet WCAG AA/AAA on dark surface', () => {
+      expect(getContrastRatio(DARK_TEXT, DARK_SURFACE)).toBeGreaterThanOrEqual(7.0);
+      expect(getContrastRatio(DARK_TEXT_MUTED, DARK_SURFACE)).toBeGreaterThanOrEqual(4.5);
     });
 
-    it('muted text meets WCAG AA (> 4.5:1) on dark surface', () => {
-      const ratio = getContrastRatio(DARK_TEXT_MUTED, DARK_SURFACE);
-      expect(ratio).toBeGreaterThanOrEqual(4.5);
-    });
-
-    it('every dark mode AQI accent meets WCAG AA (> 4.5:1) on dark surface', () => {
-      for (const [theme, colors] of Object.entries(THEMES_DARK)) {
-        const ratio = getContrastRatio(colors.accent, DARK_SURFACE);
+    it('every dark category passes all token-role contrast pairs (>= 4.5:1)', () => {
+      for (const [theme, c] of Object.entries(THEMES_DARK)) {
         expect(
-          ratio,
-          `Theme "${theme}" dark accent ${colors.accent} failed WCAG AA on dark surface`
+          getContrastRatio(c.accentText, DARK_SURFACE),
+          `${theme} accentText/surface`
         ).toBeGreaterThanOrEqual(4.5);
-      }
-    });
-
-    it('button dark text meets WCAG AA (> 4.5:1) on every dark accent button', () => {
-      for (const [theme, colors] of Object.entries(THEMES_DARK)) {
-        const ratio = getContrastRatio(colors.contrastText, colors.accent);
         expect(
-          ratio,
-          `Theme "${theme}" text failed on dark accent button ${colors.accent}`
+          getContrastRatio(c.accentText, DARK_SURFACE_RAISED),
+          `${theme} accentText/raised`
         ).toBeGreaterThanOrEqual(4.5);
+        expect(
+          getContrastRatio(c.accentText, c.accentSoft),
+          `${theme} accentText/soft`
+        ).toBeGreaterThanOrEqual(4.5);
+        expect(
+          getContrastRatio(c.onAccent, c.accentFill),
+          `${theme} onAccent/accentFill`
+        ).toBeGreaterThanOrEqual(4.5);
+        expect(
+          getContrastRatio(c.chipText, c.chipBg),
+          `${theme} chipText/chipBg`
+        ).toBeGreaterThanOrEqual(4.5);
+        for (const stop of c.heroStops) {
+          expect(
+            getContrastRatio(DARK_TEXT, stop),
+            `${theme} hero text/${stop}`
+          ).toBeGreaterThanOrEqual(4.5);
+        }
       }
     });
   });

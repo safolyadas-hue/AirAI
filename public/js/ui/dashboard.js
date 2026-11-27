@@ -1,6 +1,6 @@
 /**
  * Today / Air Quality Dashboard View
- * Renders the circular animated SVG AQI gauge, atmospheric haze, priority actions, and 24-hr timeline.
+ * Renders the circular animated SVG AQI gauge, pollutant readout row, priority actions, and 24-hr timeline.
  */
 import { h, clear, mount } from './dom.js';
 import { icon } from './icons.js';
@@ -29,6 +29,7 @@ function createAqiGauge(aqi, categoryLabel, pollutant) {
   const circumference = 408.4;
   const offset = calculateGaugeOffset(aqi);
   const ariaLabel = `${aqi} US Air Quality Index, ${categoryLabel}. Main pollutant: ${pollutant.toUpperCase()}.`;
+  const isThreeDigits = String(Math.round(aqi)).length >= 3;
 
   const svg = h(
     'svg',
@@ -63,10 +64,38 @@ function createAqiGauge(aqi, categoryLabel, pollutant) {
     h(
       'div',
       { className: 'gauge-center' },
-      h('span', { className: 'gauge-number tabular-nums' }, String(aqi)),
+      h(
+        'span',
+        { className: `gauge-number tabular-nums ${isThreeDigits ? 'gauge-number--3digit' : ''}` },
+        String(aqi)
+      ),
       h('span', { className: 'gauge-sublabel' }, 'US AQI')
     )
   );
+}
+
+/**
+ * Builds the 4-pollutant readout row inside the hero card.
+ * @param {{ pm2_5?: number, pm10?: number, no2?: number, o3?: number }} pollutants
+ * @param {string} dominantPollutant
+ * @returns {HTMLElement}
+ */
+function createPollutantRow(pollutants, dominantPollutant) {
+  const keys = ['pm2_5', 'pm10', 'no2', 'o3'];
+  const tiles = keys.map((key) => {
+    const val = pollutants?.[key];
+    const displayVal = typeof val === 'number' ? `${val.toFixed(1)} ${i18n.hero.unitUgM3}` : '—';
+    const isDominant = key === dominantPollutant;
+
+    return h(
+      'div',
+      { className: `pollutant-tile ${isDominant ? 'pollutant-tile--dominant' : ''}` },
+      h('span', { className: 'pollutant-label' }, i18n.hero.pollutants[key] || key.toUpperCase()),
+      h('span', { className: 'pollutant-value tabular-nums' }, displayVal)
+    );
+  });
+
+  return h('div', { className: 'pollutant-row' }, ...tiles);
 }
 
 /**
@@ -87,14 +116,22 @@ function createTimelineStrip(hourly = []) {
     return h(
       'div',
       { className: `timeline-hour ${isBest ? 'is-best' : ''}` },
-      h('span', { style: { fontSize: '0.75rem', color: 'var(--color-text-muted)' } }, item.time),
-      h('strong', { className: 'tabular-nums', style: { fontSize: '0.9rem' } }, `${item.aqi}`),
+      h(
+        'span',
+        { style: { fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' } },
+        item.time
+      ),
+      h(
+        'strong',
+        { className: 'tabular-nums', style: { fontSize: 'var(--font-size-sm)' } },
+        `${item.aqi}`
+      ),
       badgeText
         ? h(
             'span',
             {
               className: `badge ${isBest ? 'badge-cost-free' : 'badge-effort-high'}`,
-              style: { fontSize: '0.6rem', padding: '2px 4px' }
+              style: { fontSize: 'var(--font-size-xs)', padding: '2px 6px' }
             },
             isBest ? 'Clean' : 'Smog'
           )
@@ -111,11 +148,20 @@ function createTimelineStrip(hourly = []) {
       h('h3', { id: 'timeline-heading' }, i18n.today.timelineTitle),
       h(
         'p',
-        { style: { fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' } },
+        { style: { fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' } },
         i18n.today.timelineSubhead
       )
     ),
-    h('div', { className: 'timeline-strip' }, ...items)
+    h(
+      'div',
+      {
+        className: 'timeline-strip',
+        tabindex: '0',
+        role: 'region',
+        'aria-label': i18n.today.timelineAriaLabel
+      },
+      ...items
+    )
   );
 }
 
@@ -123,13 +169,14 @@ function createTimelineStrip(hourly = []) {
  * Renders the Today dashboard view into the target container.
  * @param {HTMLElement} container
  * @param {object} props
- * @param {number} props.aqi
- * @param {string} props.categoryKey
- * @param {string} props.categoryLabel
- * @param {string} props.dominantPollutant
- * @param {string} props.headline
- * @param {Array<object>} props.actions
- * @param {Array<object>} [props.hourly]
+ * @param {number} [props.aqi=185]
+ * @param {string} [props.categoryKey='unhealthy']
+ * @param {string} [props.categoryLabel='Unhealthy']
+ * @param {string} [props.dominantPollutant='pm2_5']
+ * @param {{ pm2_5?: number, pm10?: number, no2?: number, o3?: number }} [props.pollutants={}]
+ * @param {string} [props.headline='']
+ * @param {Array<object>} [props.actions=[]]
+ * @param {Array<object>} [props.hourly=[]]
  */
 export function renderTodayView(
   container,
@@ -138,14 +185,14 @@ export function renderTodayView(
     categoryKey = 'unhealthy',
     categoryLabel = 'Unhealthy',
     dominantPollutant = 'pm2_5',
+    pollutants = {},
     headline = '',
     actions = [],
     hourly = []
-  }
+  } = {}
 ) {
   clear(container);
 
-  // Hero Card with Haze and Circular Gauge
   const heroCard = h(
     'div',
     { className: 'hero-card col-span-12' },
@@ -157,7 +204,7 @@ export function renderTodayView(
       createAqiGauge(aqi, categoryLabel, dominantPollutant),
       h(
         'div',
-        { style: { display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' } },
+        { className: 'hero-text-col' },
         h(
           'div',
           {
@@ -184,6 +231,7 @@ export function renderTodayView(
           )
         ),
         h('h2', { style: { marginTop: 'var(--space-1)' } }, headline || i18n.today.riskBannerTitle),
+        createPollutantRow(pollutants, dominantPollutant),
         h(
           'p',
           {
@@ -202,7 +250,6 @@ export function renderTodayView(
     )
   );
 
-  // Recommended Priority Actions Grid
   const actionCards = actions.map((act) =>
     h(
       'div',
@@ -213,7 +260,9 @@ export function renderTodayView(
           style: {
             display: 'flex',
             justifyContent: 'space-between',
-            marginBottom: 'var(--space-2)'
+            marginBottom: 'var(--space-2)',
+            gap: 'var(--space-2)',
+            flexWrap: 'wrap'
           }
         },
         h('span', { className: 'badge chip-accent' }, act.category),
@@ -232,7 +281,7 @@ export function renderTodayView(
       ),
       h(
         'p',
-        { style: { fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' } },
+        { style: { fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' } },
         act.why
       ),
       h(
