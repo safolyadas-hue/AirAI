@@ -14,9 +14,10 @@ These binding rules must be followed in every task:
 
 ## 2. Architecture & Separation of Concerns
 
+- `/public/js/app/`: Application controller (`controller.js`) — the only layer that orchestrates services, domain logic, and store.
 - `/public/js/domain/`: Pure functions only. Zero DOM access, zero network access (e.g., `aqi.js`, `profile.js`, `rules.js`, `impact.js`, `impactFactors.js`, `hourly.js`).
 - `/public/js/services/`: Network access and external communication (e.g., API requests).
-- `/public/js/ui/`: DOM rendering and event listeners only.
+- `/public/js/ui/`: DOM rendering and event listeners only (never calls services or domain directly).
 - `/public/js/state/`: Reactive application store and state management.
 - `/netlify/functions/lib/`: Shared backend helper modules (HTTP, validation, rate limiting, Gemini AI, prompts).
 

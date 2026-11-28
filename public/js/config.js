@@ -16,13 +16,9 @@ export const AQI_BREAKPOINTS = Object.freeze({
  * Source: DEFRA Greenhouse Gas Conversion Factors & EPA Household Exposure Model
  */
 export const IMPACT_CONSTANTS = Object.freeze({
-  // kg CO2 equivalent saved per km by replacing car with walking/cycling
   CAR_EMISSION_FACTOR_PER_KM: 0.171,
-  // kg CO2 saved per km using metro/electric transit instead of single-occupancy car
   TRANSIT_SAVINGS_PER_KM: 0.103,
-  // Approximate microgram/m3 PM2.5 reduction indoors with sealed doors & HEPA filter
   HEPA_REDUCTION_PERCENTAGE: 0.85,
-  // Natural indoor plants VOC reduction baseline index (NASA Clean Air Study)
   PLANT_AIR_CLEANING_INDEX: 1.15
 });
 
@@ -33,10 +29,26 @@ export const API_ENDPOINTS = Object.freeze({
 });
 
 /**
- * Flag controlling temporary demo mode for visual design system validation.
- * Temporary demo preview control; will be removed in Step 5 when live data is fully wired.
+ * Network timeouts in milliseconds per endpoint.
+ * Rationale: search is interactive (6s); air combines upstream feeds (10s);
+ * advice generates structured LLM JSON (25s); chat streams/generates text (15s).
  */
-export const DEMO_MODE = true;
+export const API_TIMEOUTS_MS = Object.freeze({
+  SEARCH: 6000,
+  AIR: 10000,
+  ADVICE: 25000,
+  CHAT: 15000
+});
+
+/**
+ * Client-side air data cache and auto-refresh thresholds (ms).
+ */
+export const CACHE_CONFIG = Object.freeze({
+  AIR_TTL_MS: 10 * 60 * 1000,
+  AUTO_REFRESH_STALE_MS: 30 * 60 * 1000,
+  SEARCH_DEBOUNCE_MS: 300,
+  SEARCH_MIN_CHARS: 2
+});
 
 /**
  * Maps pure domain AQI category identifiers from aqi.js to CSS data-aqi theme attribute values.

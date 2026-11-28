@@ -7,8 +7,7 @@ export const i18n = Object.freeze({
     title: 'CleanAir Companion',
     tagline:
       'Personalized guidance for navigating smog, protecting indoor air, and reducing emissions.',
-    skipToContent: 'Skip to main content',
-    demoBadge: 'DEMO PREVIEW'
+    skipToContent: 'Skip to main content'
   },
   nav: {
     label: 'Main Navigation',
@@ -27,25 +26,110 @@ export const i18n = Object.freeze({
   },
   header: {
     locationLabel: 'Location',
-    demoCity: 'New Delhi (NCR)',
+    editProfile: 'Edit profile',
     themeLabel: 'Toggle color scheme',
-    themeLight: 'Light theme',
-    themeDark: 'Dark theme',
-    themeSystem: 'System theme',
-    fontSizeLabel: 'Adjust text size',
-    fontNormal: 'Standard text size',
-    fontLarge: 'Large text size',
-    fontLarger: 'Extra large text size'
+    fontSizeLabel: 'Adjust text size'
   },
-  demo: {
-    controlLabel: 'Demo: preview air quality levels',
-    legend: 'Demo AQI Level:',
-    good: 'Good (35)',
-    moderate: 'Moderate (78)',
-    usg: 'USG (132)',
-    unhealthy: 'Unhealthy (185)',
-    veryUnhealthy: 'Very Unhealthy (245)',
-    hazardous: 'Hazardous (340)'
+  status: {
+    offlineBanner:
+      'You appear to be offline. Showing the latest loaded guidance until connection returns.',
+    loadingAir: 'Fetching live air quality and weather forecast...',
+    errorTitle: 'Could not load live air quality data',
+    errorBody: 'Please check your connection and try again.',
+    retryButton: 'Try again',
+    refreshButton: 'Refresh air data',
+    rulesOnlyNote: 'Showing smart rules-based guidance',
+    aiLoading: 'Personalizing guidance for your household...',
+    updatedJustNow: 'Updated just now',
+    updatedMinutesAgo: 'Updated {min} min ago',
+    updatedHoursAgo: 'Updated {hr} hr ago'
+  },
+  onboarding: {
+    heading: 'Set up your CleanAir profile',
+    stepIndicator: 'Step {current} of {total}',
+    quickStartLink: 'Quick start with location only',
+    back: 'Back',
+    next: 'Next',
+    finish: 'Get my plan',
+    cancel: 'Cancel',
+    steps: {
+      locationTitle: 'Where do you live?',
+      locationSubtitle: 'We fetch local air quality and hourly wind forecasts for your area.',
+      cityLabel: 'Search city or neighborhood',
+      cityPlaceholder: 'Type at least 2 characters (e.g., Delhi, London)...',
+      searching: 'Searching cities...',
+      noResults: 'No matching locations found. Try a nearby major city.',
+      searchError: 'Could not search locations right now. Please try again.',
+      useMyLocation: 'Use my location',
+      locating: 'Getting your location...',
+      myLocationName: 'My location',
+      geoUnsupported: 'Geolocation is not supported by your browser.',
+      geoDenied: 'Location permission was denied. Please search for your city instead.',
+      geoUnavailable: 'Your location is currently unavailable. Please search for your city.',
+      geoTimeout: 'Location request timed out. Please try again or search by city.',
+      locationRequired: 'Please select a city from the list or use your current location.',
+      selectedLocation: 'Selected location:',
+
+      householdTitle: 'Who is in your household?',
+      householdSubtitle:
+        'Air quality thresholds tighten when children, elders, or sensitive lungs are at home.',
+      adultsLabel: 'Adults',
+      childrenLabel: 'Children',
+      elderlyLabel: 'Older adults (65+)',
+      decrease: 'Decrease',
+      increase: 'Increase',
+      pregnantLabel: 'Someone in the household is pregnant',
+      respiratoryLabel: 'Someone has asthma or a respiratory/heart condition',
+      privacyNote: 'Stays on your device.',
+
+      lifestyleTitle: 'Daily commute and home energy',
+      lifestyleSubtitle: 'Helps tailor mask, route, and indoor emission recommendations.',
+      commuteLegend: 'Primary commute mode',
+      distanceLabel: 'Daily round-trip distance (km)',
+      distanceError: 'Enter a distance between 0 and 300 km.',
+      heatingLegend: 'Home heating source',
+      cookingLegend: 'Primary cooking fuel',
+
+      homeTitle: 'Home setup and budget',
+      homeSubtitle: 'We only recommend air cleaning steps that fit your home and budget.',
+      homeTypeLegend: 'Home type',
+      windowsSealedLabel: 'Windows and door gaps are weather-sealed',
+      hasPurifierLabel: 'We have a HEPA air purifier at home',
+      exerciseOutdoorsLabel: 'Household members exercise outdoors',
+      budgetLegend: 'Filter & gear budget'
+    },
+    options: {
+      commute: {
+        walk: 'Walk',
+        cycle: 'Cycle',
+        public_transit: 'Public transit',
+        two_wheeler: 'Two-wheeler',
+        car: 'Car',
+        work_from_home: 'Work from home'
+      },
+      heating: {
+        electric: 'Electric',
+        gas: 'Gas',
+        wood_biomass: 'Wood / biomass',
+        coal: 'Coal',
+        none: 'None'
+      },
+      cooking: {
+        induction: 'Induction',
+        electric: 'Electric',
+        lpg: 'LPG / Gas',
+        biomass: 'Biomass'
+      },
+      homeType: {
+        apartment: 'Apartment',
+        house: 'House'
+      },
+      budget: {
+        low: 'Low',
+        medium: 'Medium',
+        high: 'High'
+      }
+    }
   },
   aqiCategories: {
     good: 'Good',
@@ -60,9 +144,6 @@ export const i18n = Object.freeze({
     gaugeTitle: 'Current US AQI Reading',
     gaugeDesc: 'Circular dial visualizing current air pollution level and health status.',
     dominantPrefix: 'Main pollutant:',
-    updatedJustNow: 'Updated 4 mins ago',
-    hazeLabel: 'Smog inversion haze layer',
-    safeNotice: 'Conditions are safe for all outdoor activity.',
     pollutants: {
       pm2_5: 'PM2.5',
       pm10: 'PM10',
@@ -79,7 +160,14 @@ export const i18n = Object.freeze({
     timelineSubhead: 'Optimal times for outdoor errands, exercise, and window sealing.',
     bestWindowLabel: 'Cleanest Outdoor Window',
     worstWindowLabel: 'Peak Smog Window',
-    stagnationLabel: 'Inversion Stagnation Risk',
+    windowSummary:
+      'Cleanest window: {bestTime} (AQI {bestAqi}). Peak smog: {worstTime} (AQI {worstAqi}).',
+    stagnationExplain: {
+      low: 'Stagnation risk is low: winds are helping disperse pollutants.',
+      moderate:
+        'Stagnation risk is moderate: cooler or calmer hours may trap smog near ground level.',
+      high: 'Stagnation risk is high: calm winds and cool humid air are trapping smog near breathing height.'
+    },
     recommendedActionsTitle: 'Priority Protective Actions Right Now',
     noActionsAvailable: 'No high-priority alerts for this category.'
   },
@@ -87,78 +175,58 @@ export const i18n = Object.freeze({
     heading: 'Personalized Clean Air Plan',
     subheading:
       'Tailored daily protective routine based on your household, commute, and home profile.',
-    profileSummaryTitle: 'Household Exposure Profile',
-    routineTitle: 'Structured Daily Schedule',
-    morning: 'Morning Routine (6:00 - 9:00 AM)',
-    commute: 'Commute Protection (9:00 - 11:00 AM)',
-    midday: 'Midday Indoor Defense (12:00 - 4:00 PM)',
-    evening: 'Evening Kitchen & Home (5:00 - 8:00 PM)',
-    night: 'Overnight Recovery (9:00 PM - 6:00 AM)',
-    whyDisclosureTitle: 'Why this action matters'
+    aiSummaryTitle: 'Daily AI Narrative',
+    periods: {
+      morning: 'Morning',
+      commute: 'Commute',
+      midday: 'Midday',
+      evening: 'Evening',
+      night: 'Night',
+      anytime: 'Anytime'
+    },
+    whyDisclosureTitle: 'Why this action matters',
+    emptyText: 'Complete your profile to see your daily clean air schedule.'
   },
   indoor: {
     heading: 'Indoor Air Quality Hacks',
-    subheading: 'Low-cost, highly effective techniques to keep particulate levels low indoors.',
-    purifierStatusTitle: 'Air Cleaning & Filtration',
-    ventilationTitle: 'Smart Ventilation Timing',
-    cookingTitle: 'Kitchen Emission Controls',
-    sealingTitle: 'Thermal Leak & Gap Sealing',
-    effortLabel: 'Effort',
-    costLabel: 'Cost Tier',
-    freeCost: 'Free / Zero Cost',
-    lowCost: 'Low Cost (< $15)'
+    subheading: 'Practical steps to keep indoor particulate levels low during smog episodes.',
+    aiTipsTitle: 'Tailored Indoor Tips',
+    emptyText: 'No indoor mitigation actions triggered for current conditions.'
   },
   swaps: {
     heading: 'Greener Urban Swaps',
-    subheading:
-      'Small daily choices that reduce your personal emissions footprint while protecting lungs.',
-    commuteSwapsTitle: 'Clean Transit Alternatives',
-    heatingCookingTitle: 'Clean Heating & Cooking',
-    communityTitle: 'Neighborhood Action',
-    estimatedAvoidance: 'Emissions Avoided'
+    subheading: 'Small daily choices that reduce emissions while protecting your household.',
+    aiSwapsTitle: 'Recommended Swaps',
+    emptyText: 'No commute or home energy swaps triggered for current conditions.'
   },
   chat: {
     heading: 'CleanAir Assistant',
     subheading:
       'Ask questions about respiratory protection, DIY filters, smog science, or daily routines.',
-    inputPlaceholder: 'Ask about masks, air filters, or ventilation timing...',
-    sendButton: 'Send message',
-    suggestedHeading: 'Suggested queries:',
-    suggested1: 'What mask should I wear when AQI is over 150?',
-    suggested2: 'How do I build a DIY Corsi-Rosenthal box filter?',
-    suggested3: 'Is it safe to exercise outdoors this morning?',
-    disclaimer: 'Guidance only. Not medical advice. For persistent symptoms, consult a doctor.'
+    comingTitle: 'Coming in the next update',
+    comingBody:
+      'Interactive AI chat tailored to your live air quality and household profile will be available in Step 6.'
   },
   impact: {
     heading: 'Your Estimated Clean Air Impact',
     subheading:
-      'Estimated emissions avoided and indoor exposure reduction based on typical household factors.',
-    co2SavedTitle: 'Estimated CO₂ Avoided per Week',
-    co2Metric: 'Estimated kg CO₂e / week',
-    indoorReductionTitle: 'Estimated Indoor PM2.5 Reduction',
-    indoorReductionRange: '30–50%',
-    indoorMetric: 'Estimated reduction range',
-    assumptionsTitle: 'Estimates & Assumptions',
-    assumptionsBody:
-      'Weekly CO₂ estimates use DEFRA urban transit conversion factors for a 10 km daily round trip. Indoor PM2.5 ranges reflect sealed-window + HEPA filtration studies and vary by room volume and air leakage.',
-    calculatorTitle: 'Emissions What-If Calculator (Coming Soon)',
-    calculatorBody:
-      'Compare commute modes, home heating, and filtration scenarios interactively once live location profiles are connected.'
+      'Estimated emissions avoided and indoor exposure reduction based on your household profile.',
+    comingTitle: 'Coming in the next update',
+    comingBody: 'Personalized impact estimates and what-if comparisons will be available in Step 6.'
   },
   components: {
     whyThis: 'Why this choice matters',
-    emptyTitle: 'No data currently available',
+    emptyTitle: 'Nothing to show yet',
     emptyText: 'We could not load information for this section. Please try again.',
     errorTitle: 'Unable to load content',
-    retryButton: 'Try again',
-    close: 'Close',
-    expand: 'Expand details'
+    retryButton: 'Try again'
   },
   toast: {
     themeUpdated: 'Appearance updated.',
     fontSizeUpdated: 'Text size updated.',
     viewChanged: 'View switched to ',
-    demoAqiSwitched: 'Demo AQI switched to '
+    profileSaved: 'Profile saved. Loading live air quality...',
+    airRefreshed: 'Air quality data refreshed.'
   },
   footer: {
     attribution: 'Air quality measurements & meteorological forecasts powered by Open-Meteo.',

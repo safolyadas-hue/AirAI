@@ -1,61 +1,16 @@
 /**
  * Clean Air Impact View
- * Visualizes estimated weekly CO2 avoided and indoor PM2.5 reduction ranges with transparent assumptions.
+ * Placeholder empty state until interactive impact modeling in Step 6.
  */
 import { h, clear, mount } from './dom.js';
 import { icon } from './icons.js';
 import i18n from '../i18n/en.js';
 
 /**
- * Creates a prominent statistical tile.
- * @param {string} title
- * @param {string | number} value
- * @param {string} unit
- * @param {string} iconName
- * @returns {HTMLElement}
- */
-function createStatTile(title, value, unit, iconName) {
-  return h(
-    'div',
-    { className: 'stat-tile col-span-6' },
-    h(
-      'div',
-      { style: { display: 'flex', alignItems: 'center', gap: 'var(--space-2)' } },
-      icon(iconName, { size: 18 }),
-      h(
-        'span',
-        {
-          style: {
-            fontSize: 'var(--font-size-xs)',
-            color: 'var(--color-text-muted)',
-            fontWeight: '600'
-          }
-        },
-        title
-      )
-    ),
-    h(
-      'div',
-      {
-        style: { display: 'flex', alignItems: 'baseline', gap: 'var(--space-2)', flexWrap: 'wrap' }
-      },
-      h('span', { className: 'stat-number tabular-nums' }, String(value)),
-      h(
-        'span',
-        { style: { fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' } },
-        unit
-      )
-    )
-  );
-}
-
-/**
- * Renders the clean air impact estimates view.
+ * Renders the Impact view empty state.
  * @param {HTMLElement} container
- * @param {object} [props={}]
- * @param {number} [props.estimatedWeeklyCo2Kg=8.5]
  */
-export function renderImpact(container, { estimatedWeeklyCo2Kg = 8.5 } = {}) {
+export function renderImpact(container) {
   clear(container);
 
   const header = h(
@@ -69,78 +24,37 @@ export function renderImpact(container, { estimatedWeeklyCo2Kg = 8.5 } = {}) {
     )
   );
 
-  const co2Tile = createStatTile(
-    i18n.impact.co2SavedTitle,
-    `~${estimatedWeeklyCo2Kg.toFixed(1)}`,
-    i18n.impact.co2Metric,
-    'leaf'
-  );
-
-  const indoorTile = createStatTile(
-    i18n.impact.indoorReductionTitle,
-    i18n.impact.indoorReductionRange,
-    i18n.impact.indoorMetric,
-    'home'
-  );
-
-  const assumptionsCard = h(
+  const emptyCard = h(
     'div',
-    { className: 'card card-tinted col-span-6' },
+    { className: 'card col-span-12', style: { textAlign: 'center', padding: 'var(--space-8)' } },
+    icon('leaf', { size: 32 }),
     h(
-      'div',
-      {
-        style: {
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--space-2)',
-          marginBottom: 'var(--space-2)'
-        }
-      },
-      icon('info', { size: 18 }),
-      h('h3', { style: { fontSize: 'var(--font-size-md)' } }, i18n.impact.assumptionsTitle)
+      'h3',
+      { style: { marginTop: 'var(--space-3)', marginBottom: 'var(--space-2)' } },
+      i18n.impact.comingTitle
     ),
     h(
       'p',
-      { style: { fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' } },
-      i18n.impact.assumptionsBody
-    )
-  );
-
-  const calculatorCard = h(
-    'div',
-    { className: 'card col-span-6' },
-    h(
-      'div',
       {
         style: {
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--space-2)',
-          marginBottom: 'var(--space-2)'
+          color: 'var(--color-text-muted)',
+          fontSize: 'var(--font-size-sm)',
+          marginInline: 'auto'
         }
       },
-      icon('bike', { size: 18 }),
-      h('h3', { style: { fontSize: 'var(--font-size-md)' } }, i18n.impact.calculatorTitle)
-    ),
-    h(
-      'p',
-      { style: { fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' } },
-      i18n.impact.calculatorBody
+      i18n.impact.comingBody
     )
   );
 
-  const view = h(
-    'div',
-    { className: 'bento-grid animate-fade-up', 'aria-labelledby': 'impact-heading' },
-    header,
-    co2Tile,
-    indoorTile,
-    assumptionsCard,
-    calculatorCard
+  mount(
+    container,
+    h(
+      'div',
+      { className: 'bento-grid animate-fade-up', 'aria-labelledby': 'impact-heading' },
+      header,
+      emptyCard
+    )
   );
-
-  mount(container, view);
 }
 
-// Backward compatibility helper
 export const renderImpactView = renderImpact;

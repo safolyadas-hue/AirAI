@@ -1,55 +1,188 @@
 /**
  * API Service for CleanAir Companion
- * Handles network requests to Netlify Functions endpoints.
+ * Handles network requests to Netlify Functions with timeouts, typed errors,
+ * 10-minute air cache, and in-flight request de-duplication.
  */
-import { API_ENDPOINTS } from '../config.js';
+import { API_ENDPOINTS, API_TIMEOUTS_MS, CACHE_CONFIG } from '../config.js';
 
 /**
- * Fetches current and forecasted air quality data for a given location.
- * @param {string} location - Location name or coordinates.
- * @returns {Promise<{ aqi: number, pm25: number, hourly: Array<{ time: string, aqi: number, pm25: number }> }>}
+ * Typed API Error for deterministic error handling across the controller.
  */
-export async function fetchAirQuality(location) {
-  const query = encodeURIComponent(location);
-  const response = await fetch(`${API_ENDPOINTS.AIR_QUALITY}?location=${query}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch air quality data: ${response.status}`);
+export class ApiError extends Error {
+  /**
+   * @param {'network' | 'timeout' | 'http' | 'invalid'} kind
+   * @param {string} message
+   * @param {number | null} [status=null]
+   */
+  constructor(kind, message, status = null) {
+    super(message);
+    this.name = 'ApiError';
+    this.kind = kind;
+    this.status = status;
   }
-  return response.json();
+}
+
+/** @type {Map<string, Promise<any>>} */
+const inFlightRequests = new Map();
+
+/** @type {Map<string, { data: any, expiresAt: number }>} */
+const airCache = new Map();
+
+/**
+ * Clears the in-memory air quality cache (for tests or manual hard reset).
+ */
+export function clearAirCache() {
+  airCache.clear();
+  inFlightRequests.clear();
 }
 
 /**
- * Requests GenAI advice based on air quality metrics and user profile.
- * @param {number} aqi - Current AQI.
- * @param {import('../domain/profile.js').UserProfile} profile - Household profile.
- * @returns {Promise<{ advice: string, actions: string[] }>}
+ * Executes a fetch request with AbortController timeout and in-flight de-duplication.
+ * @param {string} dedupeKey
+ * @param {string} url
+ * @param {RequestInit} options
+ * @param {number} timeoutMs
+ * @returns {Promise<any>}
  */
-export async function fetchAiAdvice(aqi, profile) {
-  const response = await fetch(API_ENDPOINTS.ADVICE, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ aqi, profile })
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to fetch advice: ${response.status}`);
+async function requestJson(dedupeKey, url, options, timeoutMs) {
+  if (inFlightRequests.has(dedupeKey)) {
+    return inFlightRequests.get(dedupeKey);
   }
-  return response.json();
+
+  const run = (async () => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      if (!response.ok) {
+        throw new ApiError('http', `HTTP ${response.status}`, response.status);
+      }
+      try {
+        return await response.json();
+      } catch {
+        throw new ApiError('invalid', 'Invalid JSON response', response.status);
+      }
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      if (err && err.name === 'AbortError') {
+        throw new ApiError('timeout', 'Request timed out');
+      }
+      throw new ApiError('network', 'Network request failed');
+    } finally {
+      clearTimeout(timer);
+      inFlightRequests.delete(dedupeKey);
+    }
+  })();
+
+  inFlightRequests.set(dedupeKey, run);
+  return run;
 }
 
 /**
- * Sends a chat message to the CleanAir Companion GenAI assistant.
- * @param {string} message - User query message.
- * @param {object} context - Contextual state (AQI, profile).
- * @returns {Promise<{ reply: string }>}
+ * Searches for candidate cities via /api/air-quality?q=...
+ * @param {string} q
+ * @returns {Promise<import('../../../netlify/functions/lib/types.js').GeocodingLocationResult[]>}
  */
-export async function sendChatMessage(message, context) {
-  const response = await fetch(API_ENDPOINTS.CHAT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, context })
-  });
-  if (!response.ok) {
-    throw new Error(`Chat request failed: ${response.status}`);
+export async function searchCity(q) {
+  const query = typeof q === 'string' ? q.trim() : '';
+  const params = new URLSearchParams({ q: query });
+  const url = `${API_ENDPOINTS.AIR_QUALITY}?${params.toString()}`;
+  const data = await requestJson(`GET:${url}`, url, { method: 'GET' }, API_TIMEOUTS_MS.SEARCH);
+  if (!data || !Array.isArray(data.results)) {
+    throw new ApiError('invalid', 'Invalid geocoding response shape');
   }
-  return response.json();
+  return data.results;
+}
+
+/**
+ * Fetches current and hourly air quality data for coordinates with 10-min cache.
+ * @param {number} lat
+ * @param {number} lon
+ * @param {{ bypassCache?: boolean }} [options={}]
+ * @returns {Promise<import('../../../netlify/functions/lib/types.js').NormalizedAirQualityResponse>}
+ */
+export async function getAirQuality(lat, lon, { bypassCache = false } = {}) {
+  const roundedLat = Number(lat).toFixed(2);
+  const roundedLon = Number(lon).toFixed(2);
+  const cacheKey = `${roundedLat},${roundedLon}`;
+
+  if (!bypassCache) {
+    const cached = airCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data;
+    }
+  }
+
+  const params = new URLSearchParams({ lat: String(lat), lon: String(lon) });
+  const url = `${API_ENDPOINTS.AIR_QUALITY}?${params.toString()}`;
+  const data = await requestJson(`GET:${url}`, url, { method: 'GET' }, API_TIMEOUTS_MS.AIR);
+
+  if (
+    !data ||
+    typeof data !== 'object' ||
+    !data.airSnapshot ||
+    typeof data.airSnapshot.aqi !== 'number' ||
+    !Array.isArray(data.hourly)
+  ) {
+    throw new ApiError('invalid', 'Invalid air quality response shape');
+  }
+
+  airCache.set(cacheKey, {
+    data,
+    expiresAt: Date.now() + CACHE_CONFIG.AIR_TTL_MS
+  });
+  return data;
+}
+
+/**
+ * Requests GenAI tailored advice based on profile, airSnapshot, and rulesOutput.
+ * @param {{
+ *   profile: import('../domain/profile.js').UserProfile,
+ *   airSnapshot: import('../../../netlify/functions/lib/types.js').AirSnapshot,
+ *   rulesOutput: { riskLevel: string, vulnerableHousehold: boolean, headline: string, actions: Array<any> }
+ * }} payload
+ * @returns {Promise<import('../../../netlify/functions/lib/types.js').AdviceOutput>}
+ */
+export async function getAdvice({ profile, airSnapshot, rulesOutput }) {
+  const body = JSON.stringify({ profile, airSnapshot, rulesOutput });
+  const data = await requestJson(
+    `POST:${API_ENDPOINTS.ADVICE}:${body}`,
+    API_ENDPOINTS.ADVICE,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body
+    },
+    API_TIMEOUTS_MS.ADVICE
+  );
+
+  if (!data || typeof data !== 'object' || (typeof data.summary !== 'string' && !data.fallback)) {
+    throw new ApiError('invalid', 'Invalid advice response shape');
+  }
+  return data;
+}
+
+/**
+ * Sends a chat message to /api/chat.
+ * @param {{ message: string, profile?: object, airSnapshot?: object, history?: Array<any> }} payload
+ * @returns {Promise<import('../../../netlify/functions/lib/types.js').ChatOutput>}
+ */
+export async function sendChat(payload) {
+  const body = JSON.stringify(payload);
+  const data = await requestJson(
+    `POST:${API_ENDPOINTS.CHAT}:${body}`,
+    API_ENDPOINTS.CHAT,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body
+    },
+    API_TIMEOUTS_MS.CHAT
+  );
+
+  if (!data || typeof data !== 'object' || typeof data.reply !== 'string') {
+    throw new ApiError('invalid', 'Invalid chat response shape');
+  }
+  return data;
 }

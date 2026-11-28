@@ -1,13 +1,62 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { initApp } from '../../public/js/main.js';
+import { STORAGE_KEYS } from '../../public/js/config.js';
+import { store } from '../../public/js/state/store.js';
 
 describe('Navigation Tabs & Arrow Key Accessibility', () => {
   beforeEach(() => {
     document.body.innerHTML = '<div id="app-root" class="app-wrapper"></div>';
     localStorage.clear();
+    const validProfile = {
+      location: { name: 'Delhi', lat: 28.61, lon: 77.21 },
+      household: {
+        adults: 2,
+        children: 0,
+        elderly: 0,
+        pregnant: false,
+        respiratoryCondition: false
+      },
+      commute: { mode: 'public_transit', distanceKm: 10 },
+      home: {
+        type: 'apartment',
+        heating: 'electric',
+        cooking: 'induction',
+        hasPurifier: false,
+        windowsSealed: false
+      },
+      budget: 'medium',
+      exerciseOutdoors: false
+    };
+    localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(validProfile));
+    store.set({ profile: validProfile, isEditingProfile: false, view: 'today' });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url) => {
+        if (String(url).includes('/api/advice')) {
+          return new Response(JSON.stringify({ fallback: true, summary: '' }), { status: 200 });
+        }
+        return new Response(
+          JSON.stringify({
+            location: { name: 'Delhi', lat: 28.61, lon: 77.21 },
+            airSnapshot: {
+              aqi: 185,
+              pm2_5: 110,
+              pm10: 210,
+              dominantPollutant: { pollutant: 'pm2_5', value: 110, ratio: 1 }
+            },
+            hourly: [
+              { time: '14:00', aqi: 120, pm25: 45, windSpeed: 6, temperature: 15, humidity: 50 }
+            ]
+          }),
+          { status: 200 }
+        );
+      })
+    );
+
     initApp();
   });
 
@@ -47,17 +96,14 @@ describe('Navigation Tabs & Arrow Key Accessibility', () => {
     const desktopTabs = Array.from(document.querySelectorAll('.desktop-nav-inner [role="tab"]'));
     const firstTab = desktopTabs[0];
 
-    // ArrowRight to next tab
     firstTab.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     const secondTab = desktopTabs[1];
     expect(secondTab.getAttribute('aria-selected')).toBe('true');
 
-    // End key to last tab
     secondTab.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
     const lastTab = desktopTabs[desktopTabs.length - 1];
     expect(lastTab.getAttribute('aria-selected')).toBe('true');
 
-    // Home key back to first tab
     lastTab.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
     expect(firstTab.getAttribute('aria-selected')).toBe('true');
   });
