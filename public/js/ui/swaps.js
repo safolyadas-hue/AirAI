@@ -44,7 +44,7 @@ function createSwapCard(title, category, iconName, metric, description, why) {
     h('h3', { style: { fontSize: 'var(--font-size-md)', marginBottom: 'var(--space-2)' } }, title),
     h(
       'p',
-      { style: { fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' } },
+      { style: { fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' } },
       description
     ),
     h(

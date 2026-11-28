@@ -141,12 +141,19 @@ function createHeader() {
     h('span', { style: { fontWeight: '700', fontSize: '0.9rem' } }, 'A±')
   );
 
+  const locationChip = h(
+    'span',
+    { className: 'chip header-location', title: i18n.header.locationLabel },
+    icon('location', { size: 14 }),
+    h('span', { className: 'header-location-text' }, i18n.header.demoCity)
+  );
+
   return h(
     'header',
     { className: 'app-header', role: 'banner' },
     h(
       'div',
-      { className: 'header-container' },
+      { className: 'header-container container' },
       h(
         'div',
         { className: 'brand-group' },
@@ -158,28 +165,8 @@ function createHeader() {
           h('span', { className: 'brand-badge' }, i18n.app.demoBadge)
         )
       ),
-      h(
-        'div',
-        { className: 'header-actions' },
-        h(
-          'span',
-          { className: 'chip header-location-chip', title: i18n.header.locationLabel },
-          icon('location', { size: 14 }),
-          i18n.header.demoCity
-        ),
-        fontBtn,
-        themeBtn
-      ),
-      h(
-        'div',
-        { className: 'header-location-subrow' },
-        h(
-          'span',
-          { className: 'chip', title: i18n.header.locationLabel },
-          icon('location', { size: 14 }),
-          i18n.header.demoCity
-        )
-      )
+      locationChip,
+      h('div', { className: 'header-actions' }, fontBtn, themeBtn)
     )
   );
 }
@@ -234,7 +221,7 @@ function createDemoBar(onLevelChange) {
     { className: 'demo-control-bar', 'aria-label': i18n.demo.controlLabel },
     h(
       'div',
-      { className: 'demo-control-inner' },
+      { className: 'demo-control-inner container' },
       h('span', { className: 'demo-title-tag' }, icon('alert', { size: 14 }), i18n.demo.legend),
       h('div', { className: 'segmented-control', role: 'radiogroup' }, ...buttons)
     )
@@ -280,6 +267,7 @@ function wireTabKeyboard(tabElements, onSelectTab) {
 export function initApp() {
   const root = document.getElementById('app-root');
   if (!root) return;
+  root.classList.add('app-wrapper');
 
   // Sync preferences
   applyTheme(getSavedTheme());
@@ -288,13 +276,15 @@ export function initApp() {
   setAqiTheme(currentCategoryKey);
   initSkipLink();
 
-  // Create main tabpanel
+  // Create main tabpanel wrapped in <main> with shared container class
   const panel = h('section', {
     id: `panel-${currentActiveTab}`,
     role: 'tabpanel',
     'aria-labelledby': `tab-${currentActiveTab}`,
     tabindex: '0'
   });
+
+  const mainContent = h('main', { id: 'main-content', className: 'app-main container' }, panel);
 
   const switchTab = (tabId) => {
     currentActiveTab = tabId;
@@ -342,7 +332,7 @@ export function initApp() {
   const desktopNav = h(
     'nav',
     { className: 'desktop-nav', 'aria-label': i18n.nav.label },
-    h('div', { className: 'desktop-nav-inner', role: 'tablist' }, ...desktopTabs)
+    h('div', { className: 'desktop-nav-inner container', role: 'tablist' }, ...desktopTabs)
   );
 
   // Build Mobile Bottom Nav Tabs
@@ -382,7 +372,7 @@ export function initApp() {
     { className: 'app-footer', role: 'contentinfo' },
     h(
       'div',
-      { className: 'footer-inner' },
+      { className: 'footer-inner container' },
       h(
         'div',
         {},
@@ -410,7 +400,7 @@ export function initApp() {
 
   // Mount shell
   root.textContent = '';
-  mount(root, header, demoBar || h('div'), desktopNav, panel, mobileNav, footer);
+  mount(root, header, demoBar || h('div'), desktopNav, mainContent, mobileNav, footer);
 
   // Initial view render
   renderActiveView(panel, false);

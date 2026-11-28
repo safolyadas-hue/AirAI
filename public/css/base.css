@@ -61,7 +61,7 @@ h4 {
 
 p {
   margin-bottom: var(--space-3);
-  max-width: 72ch;
+  max-width: 65ch;
 }
 
 p:last-child {

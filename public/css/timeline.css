@@ -9,8 +9,27 @@
   padding: var(--space-2) var(--space-2);
   scrollbar-width: thin;
   scroll-snap-type: x mandatory;
-  -webkit-mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
-  mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+}
+
+.timeline-strip.has-overflow-right {
+  -webkit-mask-image: linear-gradient(to right, black 0%, black 92%, transparent 100%);
+  mask-image: linear-gradient(to right, black 0%, black 92%, transparent 100%);
+}
+
+.timeline-strip.has-overflow-left {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 100%);
+}
+
+.timeline-strip.has-overflow-left.has-overflow-right {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
 }
 
 .timeline-strip:focus-visible {

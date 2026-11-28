@@ -99,6 +99,19 @@ function createPollutantRow(pollutants, dominantPollutant) {
 }
 
 /**
+ * Updates horizontal overflow fade classes on the timeline strip based on scroll position.
+ * @param {HTMLElement | null} stripEl
+ */
+export function updateTimelineFade(stripEl) {
+  if (!stripEl) return;
+  const threshold = 2;
+  const hasLeft = stripEl.scrollLeft > threshold;
+  const hasRight = stripEl.scrollLeft + stripEl.clientWidth < stripEl.scrollWidth - threshold;
+  stripEl.classList.toggle('has-overflow-left', hasLeft);
+  stripEl.classList.toggle('has-overflow-right', hasRight);
+}
+
+/**
  * Builds the 24-hour timeline strip for ventilation and outdoor windows.
  * @param {Array<{ time: string, aqi: number, isBest?: boolean, isWorst?: boolean }>} hourly
  * @returns {HTMLElement}
@@ -139,6 +152,24 @@ function createTimelineStrip(hourly = []) {
     );
   });
 
+  const strip = h(
+    'div',
+    {
+      className: 'timeline-strip',
+      tabindex: '0',
+      role: 'region',
+      'aria-label': i18n.today.timelineAriaLabel,
+      onScroll: (e) => updateTimelineFade(/** @type {HTMLElement} */ (e.currentTarget))
+    },
+    ...items
+  );
+
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => updateTimelineFade(strip));
+  } else {
+    updateTimelineFade(strip);
+  }
+
   return h(
     'section',
     { className: 'card card-raised col-span-12', 'aria-labelledby': 'timeline-heading' },
@@ -152,16 +183,7 @@ function createTimelineStrip(hourly = []) {
         i18n.today.timelineSubhead
       )
     ),
-    h(
-      'div',
-      {
-        className: 'timeline-strip',
-        tabindex: '0',
-        role: 'region',
-        'aria-label': i18n.today.timelineAriaLabel
-      },
-      ...items
-    )
+    strip
   );
 }
 
