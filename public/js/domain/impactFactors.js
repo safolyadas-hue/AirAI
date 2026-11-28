@@ -100,6 +100,22 @@ export function getEmissionFactor(mode) {
 }
 
 /**
+ * Community-scale impact multipliers ("if 100 households")
+ * Source: EPA Idle Fuel Model, USDA Forest Service Urban Tree Absorption, DEFRA Carpool Factors
+ */
+export const COMMUNITY_MULTIPLIERS = Object.freeze({
+  HOUSEHOLD_COUNT: 100,
+  // 15 min/day engine idling avoided * 5 days/week (~2.4 kg CO2/household/week)
+  NO_IDLING_KG_CO2_WEEK: 2.4,
+  // Reporting and halting local open waste burning reduces neighborhood plume spikes (~15% local drop)
+  REPORT_BURNING_LOCAL_PM25_PERCENT: 15,
+  // 1 mature urban tree absorbs ~21.7 kg CO2/year (USDA Forest Service)
+  TREE_PLANTING_KG_CO2_YEAR: 21.7,
+  // Splitting a 10 km/day car commute across 2+ households (~8.5 kg CO2/household/week)
+  CARPOOL_KG_CO2_WEEK: 8.5
+});
+
+/**
  * Describes the emission savings qualitative tier.
  * @param {number} kgSaved - Total kg CO2 avoided.
  * @returns {'bronze' | 'silver' | 'gold'}

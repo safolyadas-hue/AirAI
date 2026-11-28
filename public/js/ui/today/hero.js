@@ -20,11 +20,6 @@ export function formatRelativeUpdated(lastUpdatedAt) {
   return i18n.status.updatedHoursAgo.replace('{hr}', String(diffHr));
 }
 
-/**
- * Calculates SVG stroke-dashoffset for the circular gauge.
- * @param {number} aqi
- * @returns {number}
- */
 function calculateGaugeOffset(aqi) {
   const circumference = 408.4;
   const clamped = Math.max(0, Math.min(aqi, 500));
@@ -78,7 +73,7 @@ export function createAqiGauge(aqi, categoryLabel, pollutant) {
 }
 
 /**
- * Builds the Hero Card with gauge, category badge, headline, pollutant tiles, and refresh button.
+ * Builds the Hero Card with gauge, category badge, headline, pollutant tiles, refresh, and print button.
  * @param {object} props
  * @returns {HTMLElement}
  */
@@ -89,7 +84,8 @@ export function createHeroCard({
   headlineText,
   aiNote,
   lastUpdatedAt,
-  onRefresh
+  onRefresh,
+  onPrint
 }) {
   const domKey = snapshot.dominantPollutant?.pollutant || 'pm2_5';
   const badges = h(
@@ -110,9 +106,9 @@ export function createHeroCard({
       `${i18n.hero.dominantPrefix} ${domKey.toUpperCase().replace('_', '.')}`
     )
   );
-  const refreshRow = h(
+  const actionsRow = h(
     'div',
-    { style: { display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' } },
+    { style: { display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' } },
     h(
       'span',
       {
@@ -132,6 +128,11 @@ export function createHeroCard({
       { type: 'button', className: 'btn btn-secondary', onClick: onRefresh },
       icon('refresh', { size: 14 }),
       i18n.status.refreshButton
+    ),
+    h(
+      'button',
+      { type: 'button', className: 'btn btn-secondary', onClick: onPrint },
+      i18n.today.printButton
     )
   );
 
@@ -151,7 +152,7 @@ export function createHeroCard({
         h('h2', { style: { marginTop: 'var(--space-1)' } }, headlineText),
         aiNote,
         createPollutantRow(snapshot, domKey),
-        refreshRow
+        actionsRow
       )
     )
   );

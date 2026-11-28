@@ -1,9 +1,38 @@
 /**
- * Today View - Priority Protective Actions Grid
+ * Today View - Priority Protective Actions Grid with Impact Chips
  */
 import { h } from '../dom.js';
 import { icon } from '../icons.js';
 import i18n from '../../i18n/en.js';
+
+/**
+ * Builds impact chips from an action's pre-computed impact object.
+ * @param {any} impact
+ * @returns {HTMLElement[]}
+ */
+function createImpactChips(impact) {
+  if (!impact) return [];
+  const chips = [];
+  if (impact.pm25ReductionRange) {
+    chips.push(
+      h(
+        'span',
+        { className: 'chip chip-accent' },
+        `${i18n.plan.estimatedPrefix}: -${impact.pm25ReductionRange.min}–${impact.pm25ReductionRange.max}% PM2.5`
+      )
+    );
+  }
+  if (impact.co2KgPerWeek > 0) {
+    chips.push(
+      h(
+        'span',
+        { className: 'chip badge-cost-free' },
+        `${i18n.plan.estimatedPrefix}: -${impact.co2KgPerWeek} kg CO₂/wk`
+      )
+    );
+  }
+  return chips;
+}
 
 /**
  * Builds the top-3 priority actions section.
@@ -11,8 +40,7 @@ import i18n from '../../i18n/en.js';
  * @returns {HTMLElement}
  */
 export function createActionsSection(actions = []) {
-  const topActions = actions.slice(0, 3);
-  const actionCards = topActions.map((act) =>
+  const actionCards = actions.slice(0, 3).map((act) =>
     h(
       'div',
       { className: 'card card-interactive col-span-4' },
@@ -47,10 +75,26 @@ export function createActionsSection(actions = []) {
         act.why
       ),
       h(
+        'div',
+        {
+          style: {
+            display: 'flex',
+            gap: 'var(--space-2)',
+            flexWrap: 'wrap',
+            marginTop: 'var(--space-2)'
+          }
+        },
+        ...createImpactChips(act.impact)
+      ),
+      h(
         'details',
         { className: 'why-disclosure' },
         h('summary', {}, icon('info', { size: 14 }), i18n.components.whyThis),
-        h('div', { className: 'disclosure-body' }, act.why)
+        h(
+          'div',
+          { className: 'disclosure-body' },
+          act.aiExplanation || act.impact?.assumption || act.why
+        )
       )
     )
   );

@@ -15,6 +15,7 @@ import {
 } from './ui/a11y.js';
 import { store } from './state/store.js';
 import { controller } from './app/controller.js';
+import * as selectors from './app/selectors.js';
 import { createHeader } from './ui/shell/header.js';
 import { createNavigation } from './ui/shell/nav.js';
 import { createOfflineBanner, createFooter } from './ui/shell/banners.js';
@@ -54,7 +55,7 @@ export function initApp() {
   root.textContent = '';
   mount(root, header.el, offlineBanner, nav.desktopNav, mainContent, nav.mobileNav, footer);
 
-  const renderRoute = createViewRouter({ panel, actions: controller });
+  const renderRoute = createViewRouter({ panel, selectors, actions: controller });
 
   const renderFromState = (state) => {
     const showOnboarding = !state.profile || state.isEditingProfile;

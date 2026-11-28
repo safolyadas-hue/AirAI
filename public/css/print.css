@@ -1,0 +1,53 @@
+/**
+ * CleanAir Companion - Print Stylesheet
+ * Clean black-on-white single-page family plan summary.
+ */
+.print-only {
+  display: none;
+}
+
+@media print {
+  body {
+    background: var(--print-bg);
+    color: var(--print-fg);
+    font-size: 11pt;
+  }
+
+  .app-header,
+  .desktop-nav,
+  .mobile-nav,
+  .offline-banner,
+  .app-footer a,
+  .btn,
+  button,
+  .toast-container {
+    display: none !important;
+  }
+
+  .app-main {
+    padding: 0;
+    margin: 0;
+    max-width: 100%;
+  }
+
+  .card,
+  .hero-card,
+  .stat-tile {
+    background: var(--print-bg) !important;
+    color: var(--print-fg) !important;
+    box-shadow: none !important;
+    border-color: var(--print-fg) !important;
+    break-inside: avoid;
+  }
+
+  .hero-haze-layer {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--print-fg);
+  }
+}

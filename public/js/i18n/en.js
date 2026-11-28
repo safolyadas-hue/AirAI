@@ -2,6 +2,8 @@
  * English Dictionary (Single Source of Truth for User-Facing Strings)
  * Adheres strictly to AGENTS.md internationalization rule: no hardcoded UI strings.
  */
+import { onboardingStrings } from './enOnboarding.js';
+
 export const i18n = Object.freeze({
   app: {
     title: 'CleanAir Companion',
@@ -44,93 +46,7 @@ export const i18n = Object.freeze({
     updatedMinutesAgo: 'Updated {min} min ago',
     updatedHoursAgo: 'Updated {hr} hr ago'
   },
-  onboarding: {
-    heading: 'Set up your CleanAir profile',
-    stepIndicator: 'Step {current} of {total}',
-    quickStartLink: 'Quick start with location only',
-    back: 'Back',
-    next: 'Next',
-    finish: 'Get my plan',
-    cancel: 'Cancel',
-    steps: {
-      locationTitle: 'Where do you live?',
-      locationSubtitle: 'We fetch local air quality and hourly wind forecasts for your area.',
-      cityLabel: 'Search city or neighborhood',
-      cityPlaceholder: 'Type at least 2 characters (e.g., Delhi, London)...',
-      searching: 'Searching cities...',
-      noResults: 'No matching locations found. Try a nearby major city.',
-      searchError: 'Could not search locations right now. Please try again.',
-      useMyLocation: 'Use my location',
-      locating: 'Getting your location...',
-      myLocationName: 'My location',
-      geoUnsupported: 'Geolocation is not supported by your browser.',
-      geoDenied: 'Location permission was denied. Please search for your city instead.',
-      geoUnavailable: 'Your location is currently unavailable. Please search for your city.',
-      geoTimeout: 'Location request timed out. Please try again or search by city.',
-      locationRequired: 'Please select a city from the list or use your current location.',
-      selectedLocation: 'Selected location:',
-
-      householdTitle: 'Who is in your household?',
-      householdSubtitle:
-        'Air quality thresholds tighten when children, elders, or sensitive lungs are at home.',
-      adultsLabel: 'Adults',
-      childrenLabel: 'Children',
-      elderlyLabel: 'Older adults (65+)',
-      decrease: 'Decrease',
-      increase: 'Increase',
-      pregnantLabel: 'Someone in the household is pregnant',
-      respiratoryLabel: 'Someone has asthma or a respiratory/heart condition',
-      privacyNote: 'Stays on your device.',
-
-      lifestyleTitle: 'Daily commute and home energy',
-      lifestyleSubtitle: 'Helps tailor mask, route, and indoor emission recommendations.',
-      commuteLegend: 'Primary commute mode',
-      distanceLabel: 'Daily round-trip distance (km)',
-      distanceError: 'Enter a distance between 0 and 300 km.',
-      heatingLegend: 'Home heating source',
-      cookingLegend: 'Primary cooking fuel',
-
-      homeTitle: 'Home setup and budget',
-      homeSubtitle: 'We only recommend air cleaning steps that fit your home and budget.',
-      homeTypeLegend: 'Home type',
-      windowsSealedLabel: 'Windows and door gaps are weather-sealed',
-      hasPurifierLabel: 'We have a HEPA air purifier at home',
-      exerciseOutdoorsLabel: 'Household members exercise outdoors',
-      budgetLegend: 'Filter & gear budget'
-    },
-    options: {
-      commute: {
-        walk: 'Walk',
-        cycle: 'Cycle',
-        public_transit: 'Public transit',
-        two_wheeler: 'Two-wheeler',
-        car: 'Car',
-        work_from_home: 'Work from home'
-      },
-      heating: {
-        electric: 'Electric',
-        gas: 'Gas',
-        wood_biomass: 'Wood / biomass',
-        coal: 'Coal',
-        none: 'None'
-      },
-      cooking: {
-        induction: 'Induction',
-        electric: 'Electric',
-        lpg: 'LPG / Gas',
-        biomass: 'Biomass'
-      },
-      homeType: {
-        apartment: 'Apartment',
-        house: 'House'
-      },
-      budget: {
-        low: 'Low',
-        medium: 'Medium',
-        high: 'High'
-      }
-    }
-  },
+  onboarding: onboardingStrings,
   aqiCategories: {
     good: 'Good',
     moderate: 'Moderate',
@@ -155,6 +71,16 @@ export const i18n = Object.freeze({
   today: {
     heading: 'Today’s Air & Immediate Routines',
     riskBannerTitle: 'Today’s Air Quality Briefing',
+    familyTitle: 'What this means for your family',
+    stagnationTitle: 'Why smog is trapped today',
+    stagnationMetrics: 'Wind: {wind} · Temp: {temp} · Humidity: {humidity}',
+    safetyTitle: 'Severe Air Safety Alert',
+    safetyBody:
+      'Limit all outdoor exposure, wear a tight-fitting N95/FFP2 respirator if you must go outside, and consult a clinician if anyone experiences wheezing, chest tightness, or shortness of breath.',
+    printButton: 'Print my family plan',
+    printDisclaimer: 'Guidance only, not medical advice.',
+    printIndoorEssentials:
+      'Indoor Air Essentials: Seal window drafts, run HEPA or DIY box-fan filtration, and avoid indoor smoke.',
     timelineTitle: '24-Hour Air Quality & Ventilation Windows',
     timelineAriaLabel: '24-hour air quality forecast',
     timelineSubhead: 'Optimal times for outdoor errands, exercise, and window sealing.',
@@ -175,6 +101,15 @@ export const i18n = Object.freeze({
     heading: 'Personalized Clean Air Plan',
     subheading:
       'Tailored daily protective routine based on your household, commute, and home profile.',
+    progressLabel: '{done} of {total} actions done today',
+    doneCheckboxLabel: 'Mark done',
+    doneAnnounced: 'Marked "{title}" as done.',
+    undoneAnnounced: 'Marked "{title}" as not done.',
+    whyImpactTitle: 'Why this? Impact',
+    estimatedPrefix: 'Estimated',
+    pm25RangeLabel: 'Estimated PM2.5 exposure reduction: {min}–{max}%',
+    co2WeeklyLabel: 'Estimated CO₂ avoided: {kg} kg/week',
+    confidenceLabel: 'Confidence: {level}',
     aiSummaryTitle: 'Daily AI Narrative',
     periods: {
       morning: 'Morning',
@@ -185,19 +120,97 @@ export const i18n = Object.freeze({
       anytime: 'Anytime'
     },
     whyDisclosureTitle: 'Why this action matters',
-    emptyText: 'Complete your profile to see your daily clean air schedule.'
+    emptyText:
+      'No actions apply right now. Adjust your profile or refresh air data to update your plan.'
   },
   indoor: {
     heading: 'Indoor Air Quality Hacks',
     subheading: 'Practical steps to keep indoor particulate levels low during smog episodes.',
-    aiTipsTitle: 'Tailored Indoor Tips',
+    tiers: {
+      free: 'Free',
+      low: 'Low cost',
+      invest: 'Worth investing in'
+    },
+    diyTitle: 'DIY Corsi-Rosenthal Box Filter',
+    diySummary: '4 MERV-13 filters + 20" box fan + duct tape — high-CADR air cleaning at low cost.',
+    diyMaterialsTitle: 'Materials',
+    diyMaterials:
+      'Four 20×20" MERV-13 furnace filters, one 20" box fan, cardboard base, and duct tape.',
+    diySteps: [
+      'Tape four MERV-13 filters into an open cube with airflow arrows pointing inward.',
+      'Seal the bottom of the cube tightly to a square cardboard base.',
+      'Place the box fan face-up on top of the cube so it pulls air through the filters.',
+      'Tape all seams between the fan frame and filters so air cannot bypass.',
+      'Add a cardboard shroud on the fan corners if needed and run on low or medium.'
+    ],
+    diyWhy:
+      'Pulling room air through four large pleated filters delivers clean air at rates comparable to commercial HEPA units.',
+    diySvgTitle: 'DIY Corsi-Rosenthal Box Filter Diagram',
+    diySvgDesc: 'Four MERV-13 filters forming a cube with a box fan mounted on top.',
+    ventTitle: 'Ventilation Timing',
+    ventOpenMsg:
+      'Best window to open windows: {time} (forecast US AQI {aqi}). Ventilate briefly for 15–20 minutes, then close.',
+    ventClosedMsg:
+      'Keep windows closed today: all forecast hours exceed US AQI 100 (best hour is {time} at AQI {aqi}).',
+    safetyTitle: 'Cooking & Heating Safety',
+    cookingNotes: {
+      induction:
+        'Induction cooking produces zero combustion NO₂; still run a range hood for cooking oil aerosols.',
+      electric: 'Electric coils produce no combustion gas; use a lid and exhaust fan when frying.',
+      lpg: 'LPG gas flames emit indoor NO₂ and ultrafine particles; run an exhaust hood and crack a kitchen window only during clean hours.',
+      biomass:
+        'Indoor biomass cooking emits heavy PM2.5 and CO; use an outdoor/vented cookspace or transition to induction/electric.'
+    },
+    heatingNotes: {
+      electric: 'Electric heating adds zero indoor combustion particles.',
+      gas: 'Ensure gas heaters are externally vented and inspect flues for carbon monoxide safety.',
+      wood_biomass:
+        'Wood heating releases dense black carbon indoors; switch to electric heating or warm layering during smog alerts.',
+      coal: 'Coal heating creates severe indoor soot and toxic gases; halt indoor coal use and use electric warmth.',
+      none: 'No indoor combustion heating detected; focus on sealing window and door drafts.'
+    },
+    checklistTitle: 'Room-by-Room Quick Checklist',
+    checklistRooms: [
+      { id: 'kitchen', label: 'Kitchen: Run exhaust hood while cooking and 10 min after' },
+      { id: 'bedroom', label: 'Bedroom: Seal window gaps and run purifier on sleep mode' },
+      { id: 'living', label: 'Living room: Damp-mop hard floors instead of dry sweeping' },
+      { id: 'entrance', label: 'Entrance: Place a damp towel/mat at door sill to block drafts' }
+    ],
+    aiTipsTitle: 'More ideas for your home',
     emptyText: 'No indoor mitigation actions triggered for current conditions.'
   },
   swaps: {
     heading: 'Greener Urban Swaps',
     subheading: 'Small daily choices that reduce emissions while protecting your household.',
+    areas: {
+      commute: 'Commute',
+      cooking: 'Cooking',
+      heating: 'Heating',
+      community: 'Community'
+    },
+    whatChangesPrefix: 'What changes for you:',
+    communityTitle: 'Community Actions (If 100 Households Join)',
+    communityItems: {
+      'no-idling': {
+        title: 'No-Idling Pledge',
+        desc: 'Turn off vehicle engines when waiting more than 30 seconds.'
+      },
+      'report-burning': {
+        title: 'Report Open Burning',
+        desc: 'Report leaf, trash, or agricultural waste fires to local civic helplines.'
+      },
+      'tree-planting': {
+        title: 'Urban Tree Planting',
+        desc: 'Support native shade-tree planting along neighborhood streets and schools.'
+      },
+      carpooling: {
+        title: 'Neighborhood Carpooling',
+        desc: 'Share daily school and office commutes with nearby families.'
+      }
+    },
     aiSwapsTitle: 'Recommended Swaps',
-    emptyText: 'No commute or home energy swaps triggered for current conditions.'
+    emptyText:
+      'Your current commute and home energy setup is already low-emission. Explore community actions below.'
   },
   chat: {
     heading: 'CleanAir Assistant',

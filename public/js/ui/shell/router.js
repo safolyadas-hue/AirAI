@@ -1,6 +1,6 @@
 /**
  * App Shell - View Router
- * Dispatches active state to the appropriate UI view renderer.
+ * Dispatches pre-selected view models to the appropriate UI view renderer.
  */
 import i18n from '../../i18n/en.js';
 import { manageFocus } from '../a11y.js';
@@ -14,11 +14,11 @@ import { renderImpact } from '../impact.js';
 import { renderOnboarding } from '../onboarding/index.js';
 
 /**
- * Creates a stateful view router bound to the tabpanel element and callbacks.
- * @param {{ panel: HTMLElement, actions: { searchLocations: (q: string) => Promise<any[]>, validateDraft: (raw: any) => any, submitProfile: (raw: any, opts?: any) => any, cancelEditProfile: () => void, refreshAirData: () => void } }} opts
+ * Creates a stateful view router bound to the tabpanel element, selectors, and callbacks.
+ * @param {{ panel: HTMLElement, selectors: Record<string, (s: any) => any>, actions: Record<string, any> }} opts
  * @returns {(state: any) => void}
  */
-export function createViewRouter({ panel, actions }) {
+export function createViewRouter({ panel, selectors, actions }) {
   let lastView = null;
   let wasOnboarding = null;
 
@@ -47,32 +47,17 @@ export function createViewRouter({ panel, actions }) {
     const activeTab = state.view || 'today';
     panel.id = `panel-${activeTab}`;
     panel.setAttribute('aria-labelledby', `tab-${activeTab}`);
-
-    const catTheme = document.documentElement.getAttribute('data-aqi') || 'unhealthy';
-    const catLabel = i18n.aqiCategories[catTheme] || 'Unhealthy';
     const shouldFocus = lastView !== null && lastView !== activeTab;
     lastView = activeTab;
 
     if (activeTab === 'plan') {
-      renderPlanView(panel, {
-        rules: state.rules,
-        advice: state.advice,
-        adviceStatus: state.adviceStatus
-      });
+      renderPlanView(panel, { vm: selectors.selectPlanViewModel(state) });
       if (shouldFocus) manageFocus('#plan-heading');
     } else if (activeTab === 'indoor') {
-      renderIndoorView(panel, {
-        rules: state.rules,
-        advice: state.advice,
-        adviceStatus: state.adviceStatus
-      });
+      renderIndoorView(panel, { vm: selectors.selectIndoorViewModel(state) });
       if (shouldFocus) manageFocus('#indoor-heading');
     } else if (activeTab === 'swaps') {
-      renderSwapsView(panel, {
-        rules: state.rules,
-        advice: state.advice,
-        adviceStatus: state.adviceStatus
-      });
+      renderSwapsView(panel, { vm: selectors.selectSwapsViewModel(state) });
       if (shouldFocus) manageFocus('#swaps-heading');
     } else if (activeTab === 'ask') {
       renderChat(panel);
@@ -82,15 +67,7 @@ export function createViewRouter({ panel, actions }) {
       if (shouldFocus) manageFocus('#impact-heading');
     } else {
       renderTodayView(panel, {
-        status: state.status,
-        air: state.air,
-        hourly: state.hourly,
-        rules: state.rules,
-        advice: state.advice,
-        adviceStatus: state.adviceStatus,
-        categoryKey: catTheme,
-        categoryLabel: catLabel,
-        lastUpdatedAt: state.lastUpdatedAt,
+        vm: selectors.selectTodayViewModel(state),
         onRefresh: () => {
           actions.refreshAirData();
           showToast(i18n.toast.airRefreshed, { type: 'info', duration: 2000 });

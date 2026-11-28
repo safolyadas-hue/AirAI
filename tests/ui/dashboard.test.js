@@ -12,11 +12,14 @@ describe('Today Dashboard View with Live Snapshot', () => {
     container = document.getElementById('mount');
   });
 
-  it('renders AQI gauge, pollutant tiles, timeline text summary, stagnation risk, top 3 actions, and fallback note', () => {
+  it('renders AQI gauge, pollutant tiles, family & stagnation cards, timeline, top 3 actions, and fallback note', () => {
     renderTodayView(container, {
-      status: 'ready',
-      air: {
-        location: { name: 'Delhi', lat: 28.61, lon: 77.21 },
+      vm: {
+        status: 'ready',
+        aqi: 192,
+        categoryKey: 'unhealthy',
+        categoryLabel: 'Unhealthy',
+        locationName: 'Delhi',
         airSnapshot: {
           aqi: 192,
           pm2_5: 115.4,
@@ -25,44 +28,62 @@ describe('Today Dashboard View with Live Snapshot', () => {
           o3: 32.0,
           dominantPollutant: { pollutant: 'pm2_5', value: 115.4, ratio: 1 }
         },
-        hourly: [
+        headline: 'High Smog Alert for Sensitive Household',
+        familyNarrative: 'Protect 2 adults and 1 child at US AQI 192.',
+        stagnation: { risk: 'high', windSpeed: 3, temperature: 8, humidity: 82 },
+        safetyBanner: { show: false, isSevere: false },
+        hourlyPoints: [
           { time: '06:00', aqi: 210 },
           { time: '14:00', aqi: 130 }
-        ]
-      },
-      hourly: {
-        bestWindow: { time: '14:00', aqi: 130 },
-        worstWindow: { time: '06:00', aqi: 210 },
-        stagnationRisk: 'high',
-        dataPointsCount: 2
-      },
-      rules: {
-        riskLevel: 'high',
-        vulnerableHousehold: true,
-        headline: 'High Smog Alert for Sensitive Household',
-        actions: [
-          { id: '1', category: 'protection', effort: 'low', title: 'Action 1', why: 'Why 1' },
-          { id: '2', category: 'indoor', effort: 'low', title: 'Action 2', why: 'Why 2' },
-          { id: '3', category: 'routine', effort: 'medium', title: 'Action 3', why: 'Why 3' },
-          { id: '4', category: 'swap', effort: 'medium', title: 'Action 4', why: 'Why 4' }
-        ]
-      },
-      advice: { fallback: true, fallbackReason: 'timeout' },
-      adviceStatus: 'fallback',
-      categoryKey: 'unhealthy',
-      categoryLabel: 'Unhealthy',
-      lastUpdatedAt: Date.now()
+        ],
+        hourlyAnalysis: {
+          bestWindow: { time: '14:00', aqi: 130 },
+          worstWindow: { time: '06:00', aqi: 210 },
+          stagnationRisk: 'high',
+          dataPointsCount: 2
+        },
+        topActions: [
+          {
+            id: '1',
+            category: 'protection',
+            effort: 'low',
+            title: 'Action 1',
+            why: 'Why 1',
+            impact: null
+          },
+          {
+            id: '2',
+            category: 'indoor',
+            effort: 'low',
+            title: 'Action 2',
+            why: 'Why 2',
+            impact: null
+          },
+          {
+            id: '3',
+            category: 'routine',
+            effort: 'medium',
+            title: 'Action 3',
+            why: 'Why 3',
+            impact: null
+          }
+        ],
+        allPlanActions: [],
+        adviceStatus: 'fallback',
+        lastUpdatedAt: Date.now()
+      }
     });
 
     const text = container.textContent || '';
     expect(text).toContain('192');
     expect(text).toContain('115.4 µg/m³');
+    expect(text).toContain('What this means for your family');
+    expect(text).toContain('Why smog is trapped today');
+    expect(text).toContain('3 km/h');
     expect(text).toContain('Cleanest window: 14:00 (AQI 130)');
-    expect(text).toContain('Stagnation risk is high');
     expect(text).toContain('Action 1');
     expect(text).toContain('Action 3');
-    expect(text).not.toContain('Action 4'); // Top 3 priority actions only
     expect(text).toContain('Showing smart rules-based guidance');
-    expect(text).not.toContain('timeout'); // Never expose technical fallbackReason
+    expect(text).toContain('Print my family plan');
   });
 });

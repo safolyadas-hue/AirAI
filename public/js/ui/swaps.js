@@ -1,95 +1,107 @@
 /**
  * Greener Urban Swaps View
- * Renders live rules actions in the swap category plus AI swaps when available.
+ * Personalized swaps grouped by area plus community "if 100 households" impact cards.
  */
 import { h, clear, mount } from './dom.js';
 import { icon } from './icons.js';
 import i18n from '../i18n/en.js';
 
-/**
- * Builds a swap action card.
- * @param {object} act
- * @returns {HTMLElement}
- */
 function createSwapCard(act) {
+  const imp = act.impact;
   return h(
     'div',
     { className: 'card card-interactive col-span-6' },
     h(
       'div',
       {
-        style: { display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }
+        style: {
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginBottom: 'var(--space-2)',
+          gap: 'var(--space-2)',
+          flexWrap: 'wrap'
+        }
       },
-      h('span', { className: 'badge chip-accent' }, icon('leaf', { size: 14 }), act.category),
-      h('span', { className: 'badge badge-cost-free' }, act.effort)
+      h('span', { className: 'badge chip-accent' }, icon('leaf', { size: 14 }), act.costTier),
+      h('span', { className: 'badge badge-cost-free' }, `${act.effort} effort`)
     ),
-    h(
-      'h3',
-      { style: { fontSize: 'var(--font-size-md)', marginBottom: 'var(--space-2)' } },
-      act.title
-    ),
+    h('h4', { style: { marginBottom: 'var(--space-2)' } }, act.title),
     h(
       'p',
       { style: { fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' } },
-      act.why
+      `${i18n.swaps.whatChangesPrefix} ${act.why}`
     ),
-    h(
-      'details',
-      { className: 'why-disclosure' },
-      h('summary', {}, icon('info', { size: 14 }), i18n.components.whyThis),
-      h('div', { className: 'disclosure-body' }, act.why)
-    )
+    imp
+      ? h(
+          'div',
+          {
+            style: {
+              display: 'flex',
+              gap: 'var(--space-2)',
+              flexWrap: 'wrap',
+              marginTop: 'var(--space-2)'
+            }
+          },
+          imp.co2KgPerWeek > 0
+            ? h(
+                'span',
+                { className: 'chip badge-cost-free' },
+                `${i18n.plan.estimatedPrefix}: -${imp.co2KgPerWeek} kg CO₂/wk`
+              )
+            : null,
+          imp.pm25ReductionRange
+            ? h(
+                'span',
+                { className: 'chip chip-accent' },
+                `${i18n.plan.estimatedPrefix}: -${imp.pm25ReductionRange.min}–${imp.pm25ReductionRange.max}% PM2.5`
+              )
+            : null
+        )
+      : null
+  );
+}
+
+function createCommunitySection(communityActions = []) {
+  const cards = communityActions.map((item) => {
+    const copy = i18n.swaps.communityItems[item.id] || { title: item.id, desc: '' };
+    return h(
+      'div',
+      { className: 'card col-span-6' },
+      h('h4', { style: { marginBottom: 'var(--space-1)' } }, copy.title),
+      h(
+        'p',
+        { style: { fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' } },
+        copy.desc
+      ),
+      h(
+        'p',
+        {
+          style: {
+            fontSize: 'var(--font-size-xs)',
+            color: 'var(--accent-text)',
+            fontWeight: '600',
+            marginTop: 'var(--space-2)'
+          }
+        },
+        item.communityEstimate
+      )
+    );
+  });
+
+  return h(
+    'section',
+    { className: 'col-span-12' },
+    h('h3', { style: { marginBottom: 'var(--space-2)' } }, i18n.swaps.communityTitle),
+    h('div', { className: 'bento-grid' }, ...cards)
   );
 }
 
 /**
- * Builds AI swaps or loading/fallback node.
- * @param {any} advice
- * @param {string} adviceStatus
- * @returns {HTMLElement | null}
- */
-function createAiSwapsSection(advice, adviceStatus) {
-  if (adviceStatus === 'loading') {
-    return h(
-      'div',
-      { className: 'card card-tinted col-span-12' },
-      h('div', { className: 'skeleton-shimmer', style: { height: '48px' } })
-    );
-  }
-  if (Array.isArray(advice?.swaps) && advice.swaps.length > 0) {
-    return h(
-      'div',
-      { className: 'card card-tinted col-span-12' },
-      h(
-        'h3',
-        { style: { fontSize: 'var(--font-size-md)', marginBottom: 'var(--space-2)' } },
-        i18n.swaps.aiSwapsTitle
-      ),
-      ...advice.swaps.map((s) => h('p', { style: { fontSize: 'var(--font-size-sm)' } }, `• ${s}`))
-    );
-  }
-  if (adviceStatus === 'fallback' || adviceStatus === 'error') {
-    return h(
-      'p',
-      {
-        className: 'col-span-12',
-        style: { fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' }
-      },
-      i18n.status.rulesOnlyNote
-    );
-  }
-  return null;
-}
-
-/**
- * Renders the Greener Swaps view.
+ * Renders the Greener Swaps view from a precomputed view model.
  * @param {HTMLElement} container
  * @param {object} [props={}]
  */
-export function renderSwapsView(
-  container,
-  { rules = null, advice = null, adviceStatus = 'idle' } = {}
-) {
+export function renderSwapsView(container, { vm = null } = {}) {
   clear(container);
 
   const header = h(
@@ -103,21 +115,43 @@ export function renderSwapsView(
     )
   );
 
-  const swapActions = (rules?.actions || []).filter((a) => a.category === 'swap');
-  const cards =
-    swapActions.length > 0
-      ? swapActions.map(createSwapCard)
-      : [
+  const groups = vm?.groups || { commute: [], cooking: [], heating: [] };
+  const areaNodes = ['commute', 'cooking', 'heating']
+    .filter((area) => groups[area]?.length > 0)
+    .map((area) =>
+      h(
+        'section',
+        { className: 'col-span-12' },
+        h('h3', { style: { marginBottom: 'var(--space-2)' } }, i18n.swaps.areas[area]),
+        h('div', { className: 'bento-grid' }, ...groups[area].map(createSwapCard))
+      )
+    );
+
+  const emptyPersonal =
+    areaNodes.length === 0
+      ? h(
+          'div',
+          { className: 'card col-span-12' },
           h(
-            'div',
-            { className: 'card col-span-12' },
-            h(
-              'p',
-              { style: { color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' } },
-              i18n.swaps.emptyText
-            )
+            'p',
+            { style: { fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' } },
+            i18n.swaps.emptyText
           )
-        ];
+        )
+      : null;
+
+  const aiSwapsNode = vm?.aiSwaps?.length
+    ? h(
+        'div',
+        { className: 'card card-tinted col-span-12' },
+        h(
+          'h3',
+          { style: { fontSize: 'var(--font-size-md)', marginBottom: 'var(--space-2)' } },
+          i18n.swaps.aiSwapsTitle
+        ),
+        ...vm.aiSwaps.map((s) => h('p', { style: { fontSize: 'var(--font-size-sm)' } }, `• ${s}`))
+      )
+    : null;
 
   mount(
     container,
@@ -125,8 +159,10 @@ export function renderSwapsView(
       'div',
       { className: 'bento-grid animate-fade-up', 'aria-labelledby': 'swaps-heading' },
       header,
-      createAiSwapsSection(advice, adviceStatus),
-      ...cards
+      emptyPersonal,
+      ...areaNodes,
+      aiSwapsNode,
+      createCommunitySection(vm?.communityActions || [])
     )
   );
 }
