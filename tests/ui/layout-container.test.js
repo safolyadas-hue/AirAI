@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { initApp } from '../../public/js/main.js';
-import { updateTimelineFade } from '../../public/js/ui/dashboard.js';
+import { updateTimelineFade } from '../../public/js/ui/today/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LAYOUT_CSS = fs.readFileSync(path.resolve(__dirname, '../../public/css/layout.css'), 'utf8');
@@ -48,6 +48,17 @@ describe('Layout Container, Sticky Footer & Mobile Header', () => {
   it('renders the location pill only once in the header', () => {
     const locationPills = document.querySelectorAll('header.app-header .header-location');
     expect(locationPills.length).toBe(1);
+  });
+
+  it('targets <main id="main-content"> on skip-to-content activation', () => {
+    document.body.innerHTML =
+      '<a href="#main-content" class="skip-link">Skip</a><div id="app-root" class="app-wrapper"></div>';
+    initApp();
+    const skip = document.querySelector('.skip-link');
+    const main = document.getElementById('main-content');
+    expect(skip?.getAttribute('href')).toBe('#main-content');
+    skip?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(document.activeElement).toBe(main);
   });
 
   it('toggles timeline overflow fade classes based on scroll position', () => {

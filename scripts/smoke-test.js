@@ -1,19 +1,16 @@
 /**
  * CleanAir Companion API Smoke Test Script
- * Runs against live serverless endpoints (default: http://localhost:8888).
- * Pure Node 20+, zero external dependencies.
+ * Runs against an external running server (default: http://localhost:8888).
+ * Never starts a server itself. Pure Node 20+, zero external dependencies.
  */
-import http from 'node:http';
 import { evaluateRules } from '../public/js/domain/rules.js';
 import { createDefaultProfile } from '../public/js/domain/profile.js';
-import airQualityHandler from '../netlify/functions/air-quality.js';
-import adviceHandler from '../netlify/functions/advice.js';
-import chatHandler from '../netlify/functions/chat.js';
 
 let totalChecks = 0;
 let passedChecks = 0;
 let warnedChecks = 0;
 let failedChecks = 0;
+let sawMissingKey = false;
 
 /**
  * Executes a test assertion block and records pass/warn/fail.
@@ -156,6 +153,7 @@ async function checkAdvice(base, airSnapshot, hourly) {
   const data = await res.json();
 
   if (data.fallback === true) {
+    if (data.fallbackReason === 'missing_key') sawMissingKey = true;
     return {
       warn: true,
       detail: `Mode: {fallback: true} (Reason: ${data.fallbackReason || 'unknown'})`
@@ -197,6 +195,7 @@ async function checkChatStandard(base) {
   }
 
   if (data.fallback === true) {
+    if (data.fallbackReason === 'missing_key') sawMissingKey = true;
     return {
       warn: true,
       detail: `Mode: {fallback: true} (Reason: ${data.fallbackReason || 'offline'}) - First 100 chars: "${snippet}..."`
@@ -279,144 +278,58 @@ async function checkChatOversized(base) {
 }
 
 /**
- * Starts an internal Node server routing to functions if no dev server is active.
- * @returns {Promise<{ server: http.Server, baseUrl: string }>}
- */
-function startInternalServer() {
-  return new Promise((resolve, reject) => {
-    const server = http.createServer(async (nodeReq, nodeRes) => {
-      try {
-        const urlObj = new URL(nodeReq.url || '/', 'http://127.0.0.1');
-        let handler = null;
-        if (urlObj.pathname === '/api/air-quality') handler = airQualityHandler;
-        else if (urlObj.pathname === '/api/advice') handler = adviceHandler;
-        else if (urlObj.pathname === '/api/chat') handler = chatHandler;
-
-        if (!handler) {
-          nodeRes.statusCode = 404;
-          nodeRes.end(JSON.stringify({ error: 'Endpoint not found' }));
-          return;
-        }
-
-        const headers = new Headers();
-        for (const [k, v] of Object.entries(nodeReq.headers)) {
-          if (v) headers.set(k, Array.isArray(v) ? v.join(', ') : v);
-        }
-
-        const init = { method: nodeReq.method, headers };
-        if (nodeReq.method !== 'GET' && nodeReq.method !== 'HEAD') {
-          const chunks = [];
-          for await (const chunk of nodeReq) chunks.push(chunk);
-          init.body = Buffer.concat(chunks);
-        }
-
-        const webReq = new Request(`http://127.0.0.1${nodeReq.url}`, init);
-        const webRes = await handler(webReq);
-
-        nodeRes.statusCode = webRes.status;
-        for (const [k, v] of webRes.headers.entries()) nodeRes.setHeader(k, v);
-        const ab = await webRes.arrayBuffer();
-        nodeRes.end(Buffer.from(ab));
-      } catch (err) {
-        nodeRes.statusCode = 500;
-        nodeRes.end(JSON.stringify({ error: String(err) }));
-      }
-    });
-
-    server.listen(0, '127.0.0.1', () => {
-      const addr = server.address();
-      const port = typeof addr === 'object' && addr ? addr.port : 8888;
-      resolve({ server, baseUrl: `http://127.0.0.1:${port}` });
-    });
-    server.on('error', reject);
-  });
-}
-
-/**
- * Determines whether an endpoint URL is responding.
- * @param {string} url
- * @returns {Promise<boolean>}
- */
-async function isServerRunning(url) {
-  try {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 600);
-    const res = await fetch(`${url}/api/air-quality?lat=999&lon=77.21`, {
-      signal: controller.signal
-    });
-    clearTimeout(id);
-    return res.status === 400 || res.status === 200;
-  } catch {
-    return false;
-  }
-}
-
-/**
  * Main execution orchestrator
  */
 async function main() {
   const cliBase = process.argv[2] || process.env.BASE_URL;
-  let activeBase = cliBase || 'http://localhost:8888';
-  let internalServerInstance = null;
-
-  if (!cliBase) {
-    const isUp = await isServerRunning(activeBase);
-    if (!isUp) {
-      const internal = await startInternalServer();
-      internalServerInstance = internal.server;
-      activeBase = internal.baseUrl;
-    }
-  }
+  const activeBase = cliBase || 'http://localhost:8888';
 
   console.log(`\n======================================================`);
   console.log(` CleanAir Companion Endpoint Smoke Test Suite`);
-  console.log(` Target Base URL: ${activeBase}`);
+  console.log(` Target Base URL: ${activeBase} (external server — not started by this script)`);
   console.log(`======================================================\n`);
 
   let airSnapshot = null;
   let hourly = null;
 
-  try {
-    await runCheck('GET /api/air-quality?q=Delhi candidate search', () =>
-      checkGeocoding(activeBase)
-    );
+  await runCheck('GET /api/air-quality?q=Delhi candidate search', () => checkGeocoding(activeBase));
 
-    await runCheck('GET /api/air-quality?lat=28.61&lon=77.21 normalized domain shape', async () => {
-      const data = await checkAirQuality(activeBase);
-      airSnapshot = data.airSnapshot;
-      hourly = data.hourly;
-      return `AQI=${airSnapshot.aqi}, Dominant=${airSnapshot.dominantPollutant?.pollutant}, HourlyPoints=${hourly.length}`;
-    });
+  await runCheck('GET /api/air-quality?lat=28.61&lon=77.21 normalized domain shape', async () => {
+    const data = await checkAirQuality(activeBase);
+    airSnapshot = data.airSnapshot;
+    hourly = data.hourly;
+    return `AQI=${airSnapshot.aqi}, Dominant=${airSnapshot.dominantPollutant?.pollutant}, HourlyPoints=${hourly.length}`;
+  });
 
-    await runCheck('GET /api/air-quality?lat=999 returns 400', () => checkInvalidLat(activeBase));
+  await runCheck('GET /api/air-quality?lat=999 returns 400', () => checkInvalidLat(activeBase));
 
-    await runCheck('POST /api/advice with profile + airSnapshot + evaluateRules output', () =>
-      checkAdvice(activeBase, airSnapshot, hourly)
-    );
+  await runCheck('POST /api/advice with profile + airSnapshot + evaluateRules output', () =>
+    checkAdvice(activeBase, airSnapshot, hourly)
+  );
 
-    await runCheck('POST /api/chat valid air pollution question', () =>
-      checkChatStandard(activeBase)
-    );
+  await runCheck('POST /api/chat valid air pollution question', () =>
+    checkChatStandard(activeBase)
+  );
 
-    await runCheck('POST /api/chat off-topic rejection', () => checkChatOffTopic(activeBase));
+  await runCheck('POST /api/chat off-topic rejection', () => checkChatOffTopic(activeBase));
 
-    await runCheck('POST /api/chat anti-injection security check', () =>
-      checkChatInjection(activeBase)
-    );
+  await runCheck('POST /api/chat anti-injection security check', () =>
+    checkChatInjection(activeBase)
+  );
 
-    await runCheck('POST /api/chat 600-character payload returns 400', () =>
-      checkChatOversized(activeBase)
-    );
-  } finally {
-    if (internalServerInstance) {
-      internalServerInstance.close();
-    }
-  }
+  await runCheck('POST /api/chat 600-character payload returns 400', () =>
+    checkChatOversized(activeBase)
+  );
 
   console.log(`\n------------------------------------------------------`);
   console.log(
     ` Results: ${passedChecks} passed, ${warnedChecks} warned, ${failedChecks} failed (out of ${totalChecks} checks).`
   );
+  if (sawMissingKey) {
+    console.log(
+      ' Hint: The target server has no GEMINI_API_KEY; run it with netlify dev from the project folder where .env exists.'
+    );
+  }
   console.log(`------------------------------------------------------\n`);
 
   if (failedChecks > 0) {

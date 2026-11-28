@@ -50,6 +50,55 @@ function createActionCard(act) {
 }
 
 /**
+ * Builds AI daily plan section or loading/fallback node.
+ * @param {any} advice
+ * @param {string} adviceStatus
+ * @returns {HTMLElement | null}
+ */
+function createAiPlanSection(advice, adviceStatus) {
+  if (adviceStatus === 'loading') {
+    return h(
+      'div',
+      { className: 'card card-tinted col-span-12' },
+      h('div', {
+        className: 'skeleton-shimmer',
+        style: { height: '64px' },
+        'aria-label': i18n.status.aiLoading
+      })
+    );
+  }
+  if (advice?.dailyPlan) {
+    return h(
+      'div',
+      { className: 'card card-tinted col-span-12' },
+      h(
+        'h3',
+        { style: { fontSize: 'var(--font-size-md)', marginBottom: 'var(--space-2)' } },
+        i18n.plan.aiSummaryTitle
+      ),
+      ...PERIOD_ORDER.filter((p) => advice.dailyPlan[p]).map((p) =>
+        h(
+          'p',
+          { style: { fontSize: 'var(--font-size-sm)' } },
+          `${i18n.plan.periods[p]}: ${advice.dailyPlan[p]}`
+        )
+      )
+    );
+  }
+  if (adviceStatus === 'fallback' || adviceStatus === 'error') {
+    return h(
+      'p',
+      {
+        className: 'col-span-12',
+        style: { fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' }
+      },
+      i18n.status.rulesOnlyNote
+    );
+  }
+  return null;
+}
+
+/**
  * Renders the My Plan view.
  * @param {HTMLElement} container
  * @param {object} [props={}]
@@ -71,49 +120,9 @@ export function renderPlanView(
     )
   );
 
-  const aiSection =
-    adviceStatus === 'loading'
-      ? h(
-          'div',
-          { className: 'card card-tinted col-span-12' },
-          h('div', {
-            className: 'skeleton-shimmer',
-            style: { height: '64px' },
-            'aria-label': i18n.status.aiLoading
-          })
-        )
-      : advice?.dailyPlan
-        ? h(
-            'div',
-            { className: 'card card-tinted col-span-12' },
-            h(
-              'h3',
-              { style: { fontSize: 'var(--font-size-md)', marginBottom: 'var(--space-2)' } },
-              i18n.plan.aiSummaryTitle
-            ),
-            ...PERIOD_ORDER.filter((p) => advice.dailyPlan[p]).map((p) =>
-              h(
-                'p',
-                { style: { fontSize: 'var(--font-size-sm)' } },
-                `${i18n.plan.periods[p]}: ${advice.dailyPlan[p]}`
-              )
-            )
-          )
-        : adviceStatus === 'fallback' || adviceStatus === 'error'
-          ? h(
-              'p',
-              {
-                className: 'col-span-12',
-                style: { fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' }
-              },
-              i18n.status.rulesOnlyNote
-            )
-          : null;
-
   const actions = [...(rules?.actions || [])].sort(
     (a, b) => PERIOD_ORDER.indexOf(a.timeOfDay) - PERIOD_ORDER.indexOf(b.timeOfDay)
   );
-
   const bodyNodes =
     actions.length > 0
       ? actions.map(createActionCard)
@@ -135,7 +144,7 @@ export function renderPlanView(
       'div',
       { className: 'bento-grid animate-fade-up', 'aria-labelledby': 'plan-heading' },
       headerCard,
-      aiSection,
+      createAiPlanSection(advice, adviceStatus),
       ...bodyNodes
     )
   );

@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { renderTodayView } from '../../public/js/ui/dashboard.js';
+import { renderTodayView } from '../../public/js/ui/today/index.js';
 
 describe('Today Dashboard View with Live Snapshot', () => {
   let container;

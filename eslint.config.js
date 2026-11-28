@@ -26,6 +26,39 @@ export default [
     }
   },
   {
+    files: ['public/js/**/*.js', 'netlify/**/*.js'],
+    rules: {
+      'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
+      'max-lines-per-function': ['error', { max: 80, skipBlankLines: true, skipComments: true }]
+    }
+  },
+  {
+    files: ['public/js/ui/**/*.js'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '**/domain/*',
+                '**/domain/**',
+                '../domain/*',
+                '../../domain/*',
+                '**/services/*',
+                '**/services/**',
+                '../services/*',
+                '../../services/*'
+              ],
+              message:
+                'UI modules must remain render-only and cannot import from domain/ or services/.'
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     ignores: ['node_modules/', 'dist/', 'coverage/', '.netlify/']
   }
 ];

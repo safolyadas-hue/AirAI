@@ -61,6 +61,11 @@ h4 {
 
 p {
   margin-bottom: var(--space-3);
+}
+
+.prose p,
+.card p,
+.disclosure-body {
   max-width: 65ch;
 }
 

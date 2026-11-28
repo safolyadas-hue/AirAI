@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderOnboarding } from '../../public/js/ui/onboarding.js';
+import { renderOnboarding } from '../../public/js/ui/onboarding/index.js';
 
 describe('Onboarding Wizard', () => {
   let container;
