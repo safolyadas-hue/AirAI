@@ -96,6 +96,7 @@ export function createStore(initialOverrides = {}) {
     lastUpdatedAt: null,
     isOffline: typeof navigator !== 'undefined' ? navigator.onLine === false : false,
     isEditingProfile: false,
+    chat: { messages: [], status: 'idle', error: null },
     ...initialOverrides
   };
 

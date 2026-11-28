@@ -9,13 +9,52 @@ import { renderTodayView } from '../today/index.js';
 import { renderPlanView } from '../plan.js';
 import { renderIndoorView } from '../indoor.js';
 import { renderSwapsView } from '../swaps.js';
-import { renderChat } from '../chat.js';
-import { renderImpact } from '../impact.js';
+import { renderChat } from '../chat/index.js';
+import { renderImpact } from '../impact/index.js';
 import { renderOnboarding } from '../onboarding/index.js';
+
+function dispatchTabView(activeTab, panel, state, selectors, actions) {
+  if (activeTab === 'plan') {
+    renderPlanView(panel, { vm: selectors.selectPlanViewModel(state) });
+    return '#plan-heading';
+  }
+  if (activeTab === 'indoor') {
+    renderIndoorView(panel, { vm: selectors.selectIndoorViewModel(state) });
+    return '#indoor-heading';
+  }
+  if (activeTab === 'swaps') {
+    renderSwapsView(panel, { vm: selectors.selectSwapsViewModel(state) });
+    return '#swaps-heading';
+  }
+  if (activeTab === 'ask') {
+    renderChat(panel, {
+      vm: selectors.selectChatViewModel(state),
+      onSend: (text) => actions.sendChatMessage(text),
+      onRetry: () => actions.retryLastChat(),
+      onClear: () => actions.clearChat()
+    });
+    return '#chat-heading';
+  }
+  if (activeTab === 'impact') {
+    renderImpact(panel, {
+      selectModel: (selectedIds) => selectors.selectImpactViewModel(state, selectedIds)
+    });
+    return '#impact-heading';
+  }
+  renderTodayView(panel, {
+    vm: selectors.selectTodayViewModel(state),
+    onRefresh: () => {
+      actions.refreshAirData();
+      showToast(i18n.toast.airRefreshed, { type: 'info', duration: 2000 });
+    },
+    onRetry: () => actions.refreshAirData()
+  });
+  return '#timeline-heading';
+}
 
 /**
  * Creates a stateful view router bound to the tabpanel element, selectors, and callbacks.
- * @param {{ panel: HTMLElement, selectors: Record<string, (s: any) => any>, actions: Record<string, any> }} opts
+ * @param {{ panel: HTMLElement, selectors: Record<string, any>, actions: Record<string, any> }} opts
  * @returns {(state: any) => void}
  */
 export function createViewRouter({ panel, selectors, actions }) {
@@ -50,31 +89,7 @@ export function createViewRouter({ panel, selectors, actions }) {
     const shouldFocus = lastView !== null && lastView !== activeTab;
     lastView = activeTab;
 
-    if (activeTab === 'plan') {
-      renderPlanView(panel, { vm: selectors.selectPlanViewModel(state) });
-      if (shouldFocus) manageFocus('#plan-heading');
-    } else if (activeTab === 'indoor') {
-      renderIndoorView(panel, { vm: selectors.selectIndoorViewModel(state) });
-      if (shouldFocus) manageFocus('#indoor-heading');
-    } else if (activeTab === 'swaps') {
-      renderSwapsView(panel, { vm: selectors.selectSwapsViewModel(state) });
-      if (shouldFocus) manageFocus('#swaps-heading');
-    } else if (activeTab === 'ask') {
-      renderChat(panel);
-      if (shouldFocus) manageFocus('#chat-heading');
-    } else if (activeTab === 'impact') {
-      renderImpact(panel);
-      if (shouldFocus) manageFocus('#impact-heading');
-    } else {
-      renderTodayView(panel, {
-        vm: selectors.selectTodayViewModel(state),
-        onRefresh: () => {
-          actions.refreshAirData();
-          showToast(i18n.toast.airRefreshed, { type: 'info', duration: 2000 });
-        },
-        onRetry: () => actions.refreshAirData()
-      });
-      if (shouldFocus) manageFocus('#timeline-heading');
-    }
+    const headingSel = dispatchTabView(activeTab, panel, state, selectors, actions);
+    if (shouldFocus) manageFocus(headingSel);
   };
 }

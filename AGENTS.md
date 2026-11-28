@@ -15,13 +15,15 @@ These binding rules must be followed in every task:
 ## 2. Architecture & Separation of Concerns
 
 - `/public/js/main.js`: Thin application bootstrap (<80 lines) wiring store, controller, and shell UI.
-- `/public/js/app/`: Application controller (`controller.js`) — the only layer that orchestrates services, domain logic, and store.
+- `/public/js/app/`: Application controller (`controller.js`) and view-model selectors (`selectors.js`, `selectorsExtra.js`) — the only layer that orchestrates services, domain logic, and store.
 - `/public/js/domain/`: Pure functions only. Zero DOM access, zero network access (`aqi.js`, `aqiBreakpoints.js`, `profile.js`, `rules.js`, `impact.js`, `impactFactors.js`, `hourly.js`).
 - `/public/js/services/`: Network access and external communication (`api.js`).
 - `/public/js/ui/`: DOM rendering and event listeners only (never imports `domain/` or `services/`):
   - `/public/js/ui/shell/`: `header.js`, `nav.js`, `banners.js`, `router.js`.
   - `/public/js/ui/today/`: `hero.js`, `pollutants.js`, `timeline.js`, `actions.js`, `index.js`.
   - `/public/js/ui/onboarding/`: `wizard.js`, `combobox.js`, `geolocation.js`, `stepLocation.js`, `stepHousehold.js`, `stepLifestyle.js`, `stepHomeBudget.js`, `index.js`.
+  - `/public/js/ui/chat/`: `formatText.js`, `messageList.js`, `composer.js`, `index.js`.
+  - `/public/js/ui/impact/`: `chart.js`, `toggles.js`, `assumptions.js`, `index.js`.
 - `/public/js/state/`: Reactive application store (`store.js`).
 - `/netlify/functions/lib/`: Shared backend helper modules (HTTP, validation, rate limiting, Gemini AI, prompts, sanitize, types).
 

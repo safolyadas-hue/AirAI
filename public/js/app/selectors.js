@@ -7,8 +7,11 @@ import { getCategory } from '../domain/aqi.js';
 import { estimateImpact } from '../domain/impact.js';
 import { ACTION_IMPACT_FACTORS, COMMUNITY_MULTIPLIERS } from '../domain/impactFactors.js';
 import { AQI_THEME_MAP } from '../config.js';
+import { selectChatViewModel, selectImpactViewModel as selectImpactRaw } from './selectorsExtra.js';
 
-const PLAN_BLOCKS = ['morning', 'commute', 'midday', 'evening', 'night'];
+export { selectChatViewModel };
+
+const PLAN_BLOCKS = ['anytime', 'morning', 'commute', 'midday', 'evening', 'night'];
 
 /**
  * Maps an action + optional AI impactExplanations + domain estimateImpact into a UI action item.
@@ -137,9 +140,7 @@ export function selectPlanViewModel(state) {
   const blocks = PLAN_BLOCKS.map((id) => ({
     id,
     aiNote: adviceReady && state.advice.dailyPlan?.[id] ? state.advice.dailyPlan[id] : null,
-    actions: mapped.filter((a) =>
-      a.timeOfDay === 'anytime' ? id === 'midday' : a.timeOfDay === id
-    )
+    actions: mapped.filter((a) => a.timeOfDay === id)
   }));
 
   return {
@@ -246,4 +247,14 @@ export function selectSwapsViewModel(state) {
     aiSwaps: adviceReady && Array.isArray(state.advice.swaps) ? state.advice.swaps : [],
     adviceStatus: state.adviceStatus
   };
+}
+
+/**
+ * Selects the view model for the Impact what-if dashboard.
+ * @param {any} state
+ * @param {string[] | null} [selectedIds=null]
+ * @returns {object}
+ */
+export function selectImpactViewModel(state, selectedIds = null) {
+  return selectImpactRaw(state, selectedIds, mapAction);
 }

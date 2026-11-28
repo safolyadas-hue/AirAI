@@ -3,6 +3,7 @@
  * Adheres strictly to AGENTS.md internationalization rule: no hardcoded UI strings.
  */
 import { onboardingStrings } from './enOnboarding.js';
+import { chatStrings, impactStrings } from './enChatImpact.js';
 
 export const i18n = Object.freeze({
   app: {
@@ -112,12 +113,12 @@ export const i18n = Object.freeze({
     confidenceLabel: 'Confidence: {level}',
     aiSummaryTitle: 'Daily AI Narrative',
     periods: {
+      anytime: 'All day',
       morning: 'Morning',
       commute: 'Commute',
       midday: 'Midday',
       evening: 'Evening',
-      night: 'Night',
-      anytime: 'Anytime'
+      night: 'Night'
     },
     whyDisclosureTitle: 'Why this action matters',
     emptyText:
@@ -212,21 +213,8 @@ export const i18n = Object.freeze({
     emptyText:
       'Your current commute and home energy setup is already low-emission. Explore community actions below.'
   },
-  chat: {
-    heading: 'CleanAir Assistant',
-    subheading:
-      'Ask questions about respiratory protection, DIY filters, smog science, or daily routines.',
-    comingTitle: 'Coming in the next update',
-    comingBody:
-      'Interactive AI chat tailored to your live air quality and household profile will be available in Step 6.'
-  },
-  impact: {
-    heading: 'Your Estimated Clean Air Impact',
-    subheading:
-      'Estimated emissions avoided and indoor exposure reduction based on your household profile.',
-    comingTitle: 'Coming in the next update',
-    comingBody: 'Personalized impact estimates and what-if comparisons will be available in Step 6.'
-  },
+  chat: chatStrings,
+  impact: impactStrings,
   components: {
     whyThis: 'Why this choice matters',
     emptyTitle: 'Nothing to show yet',

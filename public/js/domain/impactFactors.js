@@ -116,6 +116,26 @@ export const COMMUNITY_MULTIPLIERS = Object.freeze({
 });
 
 /**
+ * Typical indoor-to-outdoor PM2.5 infiltration ratio in an ordinary unsealed home.
+ * Source: US EPA Indoor Air Quality & Building Infiltration Studies (55% to 80% of outdoor PM2.5).
+ */
+export const INDOOR_OUTDOOR_RATIO = Object.freeze({
+  low: 0.55,
+  high: 0.8
+});
+
+/**
+ * WHO 2021 Global Air Quality Guideline for 24-hour mean PM2.5 (µg/m³).
+ */
+export const WHO_PM25_24H_GUIDELINE_UGM3 = 15;
+
+/**
+ * Physical upper cap for combined household PM2.5 exposure reduction (%).
+ * Accounts for real-world leakage and unavoidable indoor/outdoor transitions.
+ */
+export const MAX_COMBINED_PM25_REDUCTION_PERCENT = 95;
+
+/**
  * Describes the emission savings qualitative tier.
  * @param {number} kgSaved - Total kg CO2 avoided.
  * @returns {'bronze' | 'silver' | 'gold'}

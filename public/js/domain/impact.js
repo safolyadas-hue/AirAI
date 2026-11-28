@@ -3,7 +3,11 @@
  * Pure functions: computes modeled CO2 emission avoidance and indoor PM2.5 reduction estimates.
  * All outputs are labeled as estimates with underlying scientific assumptions.
  */
-import { ACTION_IMPACT_FACTORS, getEmissionFactor } from './impactFactors.js';
+import {
+  ACTION_IMPACT_FACTORS,
+  MAX_COMBINED_PM25_REDUCTION_PERCENT,
+  getEmissionFactor
+} from './impactFactors.js';
 import { IMPACT_CONSTANTS } from '../config.js';
 
 /**
@@ -80,25 +84,30 @@ export function summarizeImpact(actions = [], profile) {
   }
 
   let totalCo2 = 0;
-  let maxMinPm25 = 0;
-  let maxMaxPm25 = 0;
+  let remainingMin = 1;
+  let remainingMax = 1;
 
   for (const item of actions) {
     const key = item.impactKey || item.id;
     if (!key) continue;
     const est = estimateImpact(key, profile);
     totalCo2 += est.co2AvoidedKgWeekly;
-    if (est.pm25ReductionPercentRange.min > maxMinPm25) {
-      maxMinPm25 = est.pm25ReductionPercentRange.min;
-    }
-    if (est.pm25ReductionPercentRange.max > maxMaxPm25) {
-      maxMaxPm25 = est.pm25ReductionPercentRange.max;
-    }
+    remainingMin *= 1 - est.pm25ReductionPercentRange.min / 100;
+    remainingMax *= 1 - est.pm25ReductionPercentRange.max / 100;
   }
+
+  const combinedMin = Math.min(
+    MAX_COMBINED_PM25_REDUCTION_PERCENT,
+    Math.round((1 - remainingMin) * 100)
+  );
+  const combinedMax = Math.min(
+    MAX_COMBINED_PM25_REDUCTION_PERCENT,
+    Math.round((1 - remainingMax) * 100)
+  );
 
   return {
     totalCo2AvoidedKgWeekly: Math.round(totalCo2 * 100) / 100,
-    estimatedIndoorPm25ReductionPercent: { min: maxMinPm25, max: maxMaxPm25 },
+    estimatedIndoorPm25ReductionPercent: { min: combinedMin, max: combinedMax },
     actionCount: actions.length,
     disclaimer:
       'All figures are modeled estimates based on standard exposure assumptions and peer-reviewed filtration studies. Individual home leakage and personal fit will cause variations.',

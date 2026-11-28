@@ -57,6 +57,7 @@ describe('Step 6 Views: Today, Plan, Indoor, Swaps', () => {
       vm: {
         totalActions: 1,
         blocks: [
+          { id: 'anytime', aiNote: null, actions: [] },
           {
             id: 'morning',
             aiNote: 'AI morning note',

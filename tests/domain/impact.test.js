@@ -61,7 +61,7 @@ describe('Impact Engine & Factors Domain Logic', () => {
   });
 
   describe('summarizeImpact', () => {
-    it('aggregates total weekly CO2 avoided and peak PM2.5 reduction range', () => {
+    it('combines PM2.5 reductions multiplicatively and sums CO2 savings', () => {
       const actions = [
         { id: 'n95-respirator-protection' },
         { id: 'smart-ventilation-air-cleaning' },
@@ -72,9 +72,24 @@ describe('Impact Engine & Factors Domain Logic', () => {
       expect(summary.isEstimate).toBe(true);
       expect(summary.actionCount).toBe(3);
       expect(summary.totalCo2AvoidedKgWeekly).toBe(4.5);
-      expect(summary.estimatedIndoorPm25ReductionPercent.min).toBe(70);
-      expect(summary.estimatedIndoorPm25ReductionPercent.max).toBe(85);
+      // 1 - (1-0.70)*(1-0.65)*(1-0.50) = 94.75% -> 95%
+      expect(summary.estimatedIndoorPm25ReductionPercent.min).toBe(95);
+      expect(summary.estimatedIndoorPm25ReductionPercent.max).toBe(95);
       expect(summary.disclaimer).toContain('modeled estimates');
+    });
+
+    it('never exceeds the 95% cap even with many high-impact actions', () => {
+      const actions = [
+        { id: 'n95-respirator-protection' },
+        { id: 'smart-ventilation-air-cleaning' },
+        { id: 'clean-heating-alternatives' },
+        { id: 'cooking-emission-control' },
+        { id: 'vulnerable-household-care' }
+      ];
+      const summary = summarizeImpact(actions);
+      expect(summary.estimatedIndoorPm25ReductionPercent.min).toBeLessThanOrEqual(95);
+      expect(summary.estimatedIndoorPm25ReductionPercent.max).toBeLessThanOrEqual(95);
+      expect(summary.totalCo2AvoidedKgWeekly).toBe(29.5);
     });
 
     it('handles empty actions list safely', () => {

@@ -13,12 +13,14 @@ export class ApiError extends Error {
    * @param {'network' | 'timeout' | 'http' | 'invalid'} kind
    * @param {string} message
    * @param {number | null} [status=null]
+   * @param {number | null} [retryAfter=null]
    */
-  constructor(kind, message, status = null) {
+  constructor(kind, message, status = null, retryAfter = null) {
     super(message);
     this.name = 'ApiError';
     this.kind = kind;
     this.status = status;
+    this.retryAfter = retryAfter;
   }
 }
 
@@ -56,7 +58,10 @@ async function requestJson(dedupeKey, url, options, timeoutMs) {
     try {
       const response = await fetch(url, { ...options, signal: controller.signal });
       if (!response.ok) {
-        throw new ApiError('http', `HTTP ${response.status}`, response.status);
+        const rawRetry = response.headers?.get?.('Retry-After');
+        const parsedRetry = rawRetry ? parseInt(rawRetry, 10) : NaN;
+        const retryAfter = Number.isFinite(parsedRetry) && parsedRetry > 0 ? parsedRetry : null;
+        throw new ApiError('http', `HTTP ${response.status}`, response.status, retryAfter);
       }
       try {
         return await response.json();
@@ -165,11 +170,20 @@ export async function getAdvice({ profile, airSnapshot, rulesOutput }) {
 
 /**
  * Sends a chat message to /api/chat.
- * @param {{ message: string, profile?: object, airSnapshot?: object, history?: Array<any> }} payload
+ * @param {{ message: string, history?: Array<{ role: 'user' | 'assistant', text: string }>, profile?: object | null, airSnapshot?: object | null }} payload
  * @returns {Promise<import('../../../netlify/functions/lib/types.js').ChatOutput>}
  */
-export async function sendChat(payload) {
-  const body = JSON.stringify(payload);
+export async function sendChat({ message, history = [], profile = null, airSnapshot = null }) {
+  const wirePayload = {
+    message,
+    history,
+    context: {
+      aqi: airSnapshot?.aqi,
+      airSnapshot,
+      profile
+    }
+  };
+  const body = JSON.stringify(wirePayload);
   const data = await requestJson(
     `POST:${API_ENDPOINTS.CHAT}:${body}`,
     API_ENDPOINTS.CHAT,
